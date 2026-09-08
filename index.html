@@ -338,8 +338,7 @@ textarea.modal-ta:focus{border-color:var(--primary);}
         <button class="tb-btn" onclick="insertSignature()">⬇️ 插入簽名檔（固定放最後）</button>
         <button class="tb-btn" onclick="insertBlock('tag')"># 插入 Hashtag</button>
         <button class="tb-btn" onclick="applyOpeningLineToCurrent()">👋 加上開頭第一句</button>
-        <button class="tb-btn" onclick="applyAutoFuriganaToCurrent()">🔤 自動幫本篇加注音（實驗性）</button>
-        <button class="tb-btn" onclick="applyAutoFuriganaToAll()">🔤 一鍵幫全部30天加注音</button>
+        <button class="tb-btn" onclick="applyAutoFuriganaToCurrent()">🔤 幫本篇加注音（實驗性）</button>
         <button class="tb-btn" onclick="applyEmojiToCurrent()">✨ 幫本篇加上emoji符號</button>
         <button class="tb-btn" onclick="applyEmojiToAll()">✨ 一鍵幫全部30天加上emoji</button>
         <button class="tb-btn" onclick="clearCurrent()" style="color:var(--danger);">🗑️ 清空本篇</button>
@@ -737,14 +736,40 @@ function furiganaForToken(surface, readingKatakana){
   if(!kanjiPart || !kanaPart) return surface;
   return kanjiPart + '(' + kanaPart + ')' + okurigana;
 }
+function isLikelyJapaneseSegment(s){
+  // 用假名佔全部中日文字（假名＋漢字）的比例，粗略判斷這段是不是「真的日文」。
+  // 中文句子幾乎沒有假名，日文句子通常會有不少助詞／語尾假名，藉此避免把中文誤判成日文。
+  const kanaCount = (s.match(/[ぁ-んァ-ヶー]/g)||[]).length;
+  const kanjiCount = (s.match(/[一-龯々ヶ]/g)||[]).length;
+  if(kanjiCount===0) return kanaCount>0;
+  return kanaCount / (kanaCount+kanjiCount) >= 0.28;
+}
 function autoFuriganaLine(line, tokenizer){
   const trimmed = line.trim();
-  // 已經有括號標音、或本來就沒有漢字的行，跳過，避免重複疊加或誤標中文
-  if(!trimmed || /[（(]/.test(trimmed) || !/[一-龯々ヶ]/.test(trimmed)) return line;
+  if(!trimmed) return line;
   const leading = line.match(/^\s*/)[0];
-  const tokens = tokenizer.tokenize(trimmed);
-  const out = tokens.map(t => furiganaForToken(t.surface_form, t.reading)).join('');
-  return leading + out;
+  if(/[（(]/.test(trimmed)) return line; // 已經有括號標音，跳過避免重複疊加
+  if(!/[一-龯々ヶ]/.test(trimmed)) return line; // 沒有漢字，不用處理
+
+  if(isLikelyJapaneseSegment(trimmed)){
+    // 整行看起來就是日文句子，整行處理
+    const tokens = tokenizer.tokenize(trimmed);
+    return leading + tokens.map(t => furiganaForToken(t.surface_form, t.reading)).join('');
+  }
+
+  // 整行判斷起來偏中文，但如果中文裡用「」夾了一小段日文（例如中文解釋句裡引用了一句日文），
+  // 只把引號裡面那段當日文處理，引號外的中文完全不動，避免中文被誤標注音
+  if(/「[^」]*」/.test(trimmed)){
+    const rebuilt = trimmed.replace(/「([^」]*)」/g, (whole, inner) => {
+      if(!isLikelyJapaneseSegment(inner)) return whole;
+      const tokens = tokenizer.tokenize(inner);
+      const converted = tokens.map(t => furiganaForToken(t.surface_form, t.reading)).join('');
+      return '「' + converted + '」';
+    });
+    return leading + rebuilt;
+  }
+
+  return line; // 判斷是中文，整行跳過
 }
 function autoFuriganaText(text, tokenizer){
   return String(text||'').split('\n').map(l => autoFuriganaLine(l, tokenizer)).join('\n');
