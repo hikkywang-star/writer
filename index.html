@@ -236,17 +236,20 @@ textarea.modal-ta:focus{border-color:var(--primary);}
 <div class="modal-overlay" id="recycleModal">
   <div class="modal-box" style="max-width:640px;">
     <button class="modal-close" onclick="closeModal('recycleModal')">×</button>
-    <div class="modal-title">♻️ 貼上舊文回收</div>
-    <p class="modal-p">把以前發過的舊文貼在下面，每篇之間用一行只有 <span class="mono">---</span> 的分隔線隔開。每篇第一行如果是 <span class="mono">圖:網址</span>（例：<span class="mono">圖:https://example.com/photo.jpg</span>），會自動抓成該篇的圖片網址，其餘部分當作內文。<br><b>解析後只會先放進下面的「回收區」暫存，不會自動填入任何一天，妳可以自己挑要指派到第幾天，絕對不會被覆蓋掉現有內容。</b></p>
+    <div class="modal-title">♻️ 舊文回收區</div>
+    <p class="modal-p">這裡是<b>完全獨立的第二個區域</b>，跟上面 30 天的排程互不相干——貼進來的舊文不會覆蓋、也不會取代任何一天的內容。把以前發過的舊文貼在下面，每篇之間用一行只有 <span class="mono">---</span> 的分隔線隔開。每篇第一行如果是 <span class="mono">圖:網址</span>（例：<span class="mono">圖:https://example.com/photo.jpg</span>），會自動抓成該篇的圖片網址，其餘部分當作內文。解析好之後可以在下面直接編輯，最後按「⬇️ 匯出回收區 Buffer CSV」，就能單獨拿這批舊文去 Buffer 批次上傳，跟 30 天的 CSV 是分開的兩份檔案。</p>
     <textarea class="modal-ta" id="recycleArea" placeholder="圖:https://example.com/photo1.jpg&#10;第一篇的內容……&#10;---&#10;第二篇的內容（沒有圖也可以）……&#10;---&#10;第三篇……"></textarea>
     <div style="display:flex;gap:8px;margin-top:12px;">
       <button class="btn primary" style="flex:1;justify-content:center;" onclick="parseIntoRecyclePool()">✅ 解析加入回收區</button>
       <button class="btn ghost" style="flex:1;justify-content:center;" onclick="closeModal('recycleModal')">關閉</button>
     </div>
     <div style="margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--border);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div style="font-size:13px;font-weight:800;color:var(--ink);">📦 回收區暫存（<span id="recycleCount">0</span> 篇）</div>
-        <button class="btn ghost" style="font-size:11.5px;padding:5px 10px;" onclick="clearRecyclePool()">🗑 清空回收區</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:13px;font-weight:800;color:var(--ink);">📦 回收區內容（<span id="recycleCount">0</span> 篇，跟30天排程分開獨立）</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn gold" style="font-size:11.5px;padding:5px 10px;" onclick="downloadRecycleCsv()">⬇️ 匯出回收區 Buffer CSV</button>
+          <button class="btn ghost" style="font-size:11.5px;padding:5px 10px;" onclick="clearRecyclePool()">🗑 清空回收區</button>
+        </div>
       </div>
       <div id="recyclePoolList" style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;"></div>
     </div>
@@ -334,6 +337,9 @@ textarea.modal-ta:focus{border-color:var(--primary);}
         <button class="tb-btn" onclick="wrapSel('【','】')">【 】</button>
         <button class="tb-btn" onclick="insertSignature()">⬇️ 插入簽名檔（固定放最後）</button>
         <button class="tb-btn" onclick="insertBlock('tag')"># 插入 Hashtag</button>
+        <button class="tb-btn" onclick="applyOpeningLineToCurrent()">👋 加上開頭第一句</button>
+        <button class="tb-btn" onclick="applyAutoFuriganaToCurrent()">🔤 自動幫本篇加注音（實驗性）</button>
+        <button class="tb-btn" onclick="applyAutoFuriganaToAll()">🔤 一鍵幫全部30天加注音</button>
         <button class="tb-btn" onclick="applyEmojiToCurrent()">✨ 幫本篇加上emoji符號</button>
         <button class="tb-btn" onclick="applyEmojiToAll()">✨ 一鍵幫全部30天加上emoji</button>
         <button class="tb-btn" onclick="clearCurrent()" style="color:var(--danger);">🗑️ 清空本篇</button>
@@ -356,6 +362,8 @@ textarea.modal-ta:focus{border-color:var(--primary);}
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <select id="themeSelect" onchange="onThemeSelectChange()" style="border:1.5px solid var(--border-2);background:var(--paper-2);color:var(--ink);border-radius:9px;padding:6px 10px;font-size:12px;font-weight:700;"></select>
             <button class="btn ghost" onclick="randomizeTheme()">🎲 換底色</button>
+            <button class="btn ghost" onclick="autoFillCardsFromContent(current)">🪄 用本篇文字產生圖卡DEFAULT內容</button>
+            <button class="btn ghost" onclick="autoFillCardsForAll()">🪄 一鍵幫全部30天產生圖卡內容</button>
             <button class="btn primary" onclick="downloadDayCards(current)">⬇️ 下載本篇4張圖卡</button>
             <button class="btn ghost" onclick="copyArticleHtml(current)">📋 複製文章HTML</button>
             <button class="btn accent" onclick="publishToWordPress(current)">🚀 上傳到官網（實驗性）</button>
@@ -364,7 +372,7 @@ textarea.modal-ta:focus{border-color:var(--primary);}
         </div>
         <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
           <div id="cardEditors"></div>
-          <div style="border:1.5px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--paper-2);height:520px;">
+          <div id="cardPreviewBox" style="border:1.5px solid var(--border);border-radius:var(--r-md);overflow:auto;background:var(--paper-2);height:520px;min-height:300px;min-width:280px;resize:both;">
             <iframe id="cardPreviewFrame" title="圖卡預覽" style="width:100%;height:100%;border:0;background:#fff;"></iframe>
           </div>
         </div>
@@ -380,6 +388,7 @@ textarea.modal-ta:focus{border-color:var(--primary);}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
 <script>
 const TOTAL=30, KEY="kori_buffer_batch_v1";
 const EMOJIS=['👇','⬇️','👉','➡️','★','⭐️','❤️','💚','💜','❇️','🔸','♦️','✨','🔹','📌','🌸','🍀','☀️','🌙','🎯','🧩','💬','🔖','🌿','🦝','🎋','📖','✅','🌷','🍁'];
@@ -440,32 +449,45 @@ function load(){
 function dayEmojiFor(day){
   return (state.dayEmoji && state.dayEmoji[day]) || EMOJIS[(day-1)%EMOJIS.length];
 }
-function decorateWithEmoji(text, emoji){
+const EMOJI_LINE_RE = /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}⬀-⯿←-⇿✀-➿]/u;
+function findEmojiBulletLines(text){
+  // 找出這篇文章裡「【關鍵字】」跟「例句／延伸」等小標題行，這些就是要編號插入emoji的地方
   const lines = (text||'').split('\n');
-  const emojiStartRe = /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}⬀-⯿←-⇿✀-➿]/u;
-  return lines.map(line=>{
+  const idxs = [];
+  lines.forEach((line,i)=>{
     const trimmed = line.trim();
-    if(!trimmed) return line;
-    if(emojiStartRe.test(trimmed)) return line; // 已經有emoji開頭了，不重複加
+    if(!trimmed || EMOJI_LINE_RE.test(trimmed)) return;
     const isKeywordLine = /^【.+】$/.test(trimmed);
     const isLabelLine = /^(例句|延伸|延伸閱讀|重點|小提醒|小補充|補充|練習|翻譯)[:：、]?$/.test(trimmed) || /^(例句|延伸|延伸閱讀|重點|小提醒|小補充|補充|練習)[:：]/.test(trimmed);
-    if(isKeywordLine || isLabelLine){
-      const leadingSpace = line.match(/^\s*/)[0];
-      return leadingSpace + emoji + ' ' + trimmed;
-    }
-    return line;
-  }).join('\n');
+    if(isKeywordLine || isLabelLine) idxs.push(i);
+  });
+  return idxs;
+}
+function decorateWithEmoji(text, day){
+  const lines = (text||'').split('\n');
+  const idxs = findEmojiBulletLines(text);
+  if(idxs.length===0) return text;
+  // 每一天用天數當種子洗出一份不重複順序的emoji，依序一個一個對應到每個「例句／延伸」小標題行
+  // 有幾個小標題（等於有幾則例句／段落），就用幾個不同的emoji，不會整篇都用同一個
+  const pool = seededShuffle(EMOJIS, (Number(day)||1) * 104729);
+  idxs.forEach((lineIdx, seq)=>{
+    const emoji = pool[seq % pool.length];
+    const line = lines[lineIdx];
+    const leadingSpace = line.match(/^\s*/)[0];
+    lines[lineIdx] = leadingSpace + emoji + ' ' + line.trim();
+  });
+  return lines.join('\n');
 }
 function applyEmojiToCurrent(){
   saveCurrentFromUI();
   const p = state.posts[current];
   if(!p.content || !p.content.trim()){ showToast('這一天還沒有內容'); return; }
-  const emoji = dayEmojiFor(current);
-  p.content = decorateWithEmoji(p.content, emoji);
+  const before = findEmojiBulletLines(p.content).length;
+  p.content = decorateWithEmoji(p.content, current);
   document.getElementById('mainTa').value = p.content;
   save();
   updateCharCount();
-  showToast(`✨ 已用「${emoji}」幫第 ${current} 天加上符號`);
+  showToast(before>0 ? `✨ 已用 ${before} 個不同emoji幫第 ${current} 天的段落編號` : '這一篇沒有偵測到【關鍵字】或「例句／延伸」這類小標題');
 }
 function applyEmojiToAll(){
   saveCurrentFromUI();
@@ -473,14 +495,61 @@ function applyEmojiToAll(){
   for(let i=1;i<=TOTAL;i++){
     const p = state.posts[i];
     if(!p.content || !p.content.trim()) continue;
-    p.content = decorateWithEmoji(p.content, dayEmojiFor(i));
+    p.content = decorateWithEmoji(p.content, i);
     count++;
   }
   save();
   document.getElementById('mainTa').value = state.posts[current].content || '';
   updateCharCount();
   renderList();
-  showToast(count>0 ? `✨ 已幫 ${count} 天加上各自不同的emoji符號` : '目前 30 天都還是空的');
+  showToast(count>0 ? `✨ 已幫 ${count} 天各自加上不重複的emoji段落編號` : '目前 30 天都還是空的');
+}
+
+/* ===== 開頭第一句：固定要有「關鍵字」引號、一定要出現「小狸老師」或「小狸日語」、隨機輪流換句型 ===== */
+const OPENING_TEMPLATES = [
+  '朋友們早安，今天來跟小狸老師學「{kw}」。',
+  '朋友們好，今天來跟小狸老師學「{kw}」〜',
+  '朋友們好，今天小狸日語來跟你分享：「{kw}」',
+  '朋友們好，這句「{kw}」你聽過嗎？今天來跟小狸老師學起來〜',
+  '哈囉大家好，小狸日語今天想跟你聊聊這句「{kw}」',
+  '朋友們好，小狸老師今天想教大家這句「{kw}」〜',
+  '今天想跟大家分享一句很實用的說法：「{kw}」，來跟小狸老師一起學起來〜',
+  '朋友們早安，小狸日語今天的日語小教室，來看看「{kw}」怎麼用〜'
+];
+function extractKeyword(day){
+  const p = state.posts[day];
+  if(p.topic && p.topic.trim()) return p.topic.trim();
+  const text = p.content || '';
+  const m1 = text.match(/「(.+?)」/);
+  if(m1) return m1[1];
+  const m2 = text.match(/^【(.+?)】$/m);
+  if(m2) return m2[1];
+  return '';
+}
+function openingLineFor(day, keyword){
+  // 用天數當種子，確保同一天固定拿到同一種句型，但不同天彼此輪流變化
+  const idx = (day * 7 + keyword.length) % OPENING_TEMPLATES.length;
+  return OPENING_TEMPLATES[idx].replace('{kw}', keyword);
+}
+function applyOpeningLineToCurrent(){
+  saveCurrentFromUI();
+  const p = state.posts[current];
+  const keyword = extractKeyword(current);
+  if(!keyword){ showToast('請先填一下上面的「主題」欄位，或在內文裡標出【關鍵字】，這樣才知道要放哪個字'); return; }
+  const line = openingLineFor(current, keyword);
+  const text = (p.content||'');
+  const firstLine = text.split('\n')[0] || '';
+  if(/^朋友們|^哈囉大家好|^今天想跟大家分享/.test(firstLine.trim())){
+    // 已經有開頭句了，直接整行換掉，不要疊加兩句開頭
+    const rest = text.split('\n').slice(1).join('\n');
+    p.content = line + (rest ? '\n' + rest : '');
+  } else {
+    p.content = line + (text ? '\n\n' + text : '');
+  }
+  document.getElementById('mainTa').value = p.content;
+  save();
+  updateCharCount();
+  showToast('👋 已加上開頭第一句（「' + keyword + '」）');
 }
 function defaultSig(){
   return `＿＿＿＿＿＿
@@ -636,10 +705,105 @@ var THEMES = [
 ];
 function getSvgUrl(svgString, color) { return `url("data:image/svg+xml,${encodeURIComponent(svgString.replace(/_COLOR_/g, color))}")`; }
 function getRandomFaIcon(dayNum, idxOffset) { return FA_ICONS[(Number(dayNum) * 3 + Number(idxOffset) * 7) % FA_ICONS.length]; }
+/* ===== 自動注音（實驗性）：用 kuromoji.js 做日文斷詞＋讀音查詢，自動把漢字轉成「漢字(かな)」格式 ===== */
+let kuromojiTokenizer = null;
+let kuromojiLoadPromise = null;
+function ensureKuromoji(){
+  if(kuromojiTokenizer) return Promise.resolve(kuromojiTokenizer);
+  if(kuromojiLoadPromise) return kuromojiLoadPromise;
+  kuromojiLoadPromise = new Promise((resolve, reject)=>{
+    if(typeof kuromoji === 'undefined'){ reject(new Error('kuromoji 函式庫載入失敗（可能是網路限制），無法自動注音')); return; }
+    kuromoji.builder({ dicPath: 'https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/' }).build((err, tokenizer)=>{
+      if(err){ reject(err); return; }
+      kuromojiTokenizer = tokenizer;
+      resolve(tokenizer);
+    });
+  });
+  return kuromojiLoadPromise;
+}
+function katakanaToHiragana(str){
+  return String(str||'').replace(/[ァ-ヶ]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+}
+function furiganaForToken(surface, readingKatakana){
+  if(!/[一-龯々ヶ]/.test(surface)) return surface; // 純假名／符號，不需要標音
+  const reading = katakanaToHiragana(readingKatakana || surface);
+  if(!reading || reading === surface) return surface;
+  // 去掉尾端跟讀音相同的假名（送假名／okurigana），只把「真正的漢字部分」括號標音，跟原本手動標的格式一致
+  let i = surface.length, j = reading.length;
+  while(i>0 && j>0 && surface[i-1]===reading[j-1] && !/[一-龯々ヶ]/.test(surface[i-1])){ i--; j--; }
+  const kanjiPart = surface.slice(0,i);
+  const okurigana = surface.slice(i);
+  const kanaPart = reading.slice(0,j);
+  if(!kanjiPart || !kanaPart) return surface;
+  return kanjiPart + '(' + kanaPart + ')' + okurigana;
+}
+function autoFuriganaLine(line, tokenizer){
+  const trimmed = line.trim();
+  // 已經有括號標音、或本來就沒有漢字的行，跳過，避免重複疊加或誤標中文
+  if(!trimmed || /[（(]/.test(trimmed) || !/[一-龯々ヶ]/.test(trimmed)) return line;
+  const leading = line.match(/^\s*/)[0];
+  const tokens = tokenizer.tokenize(trimmed);
+  const out = tokens.map(t => furiganaForToken(t.surface_form, t.reading)).join('');
+  return leading + out;
+}
+function autoFuriganaText(text, tokenizer){
+  return String(text||'').split('\n').map(l => autoFuriganaLine(l, tokenizer)).join('\n');
+}
+function applyAutoFuriganaToCurrent(){
+  saveCurrentFromUI();
+  const p = state.posts[current];
+  if(!p.content || !p.content.trim()){ showToast('這一天還沒有內容'); return; }
+  showToast('🔤 注音字典載入中，第一次使用會花幾秒鐘…');
+  ensureKuromoji().then(tokenizer=>{
+    p.content = autoFuriganaText(p.content, tokenizer);
+    document.getElementById('mainTa').value = p.content;
+    save();
+    updateCharCount();
+    showToast('🔤 已自動加上注音，是自動判斷的結果，請務必檢查一下有沒有讀音判斷錯誤的地方');
+  }).catch(err=>{
+    console.error(err);
+    showToast('⚠️ 自動注音失敗（' + err.message + '），可能是網路連不到字典檔，請改成手動用「漢字(かな)」格式標註');
+  });
+}
+function applyAutoFuriganaToAll(){
+  saveCurrentFromUI();
+  showToast('🔤 注音字典載入中，第一次使用會花幾秒鐘…');
+  ensureKuromoji().then(tokenizer=>{
+    let count = 0;
+    for(let i=1;i<=TOTAL;i++){
+      const p = state.posts[i];
+      if(!p.content || !p.content.trim()) continue;
+      p.content = autoFuriganaText(p.content, tokenizer);
+      count++;
+    }
+    save();
+    document.getElementById('mainTa').value = state.posts[current].content || '';
+    updateCharCount();
+    renderList();
+    showToast(count>0 ? `🔤 已幫 ${count} 天自動加上注音，記得抽查幾篇有沒有標錯` : '目前 30 天都還是空的');
+  }).catch(err=>{
+    console.error(err);
+    showToast('⚠️ 自動注音失敗（' + err.message + '），可能是網路連不到字典檔，請改成手動用「漢字(かな)」格式標註');
+  });
+}
 function convertToRuby(text){
   if(text===undefined||text===null) return "";
   text = String(text);
+  // 改回瀏覽器原生 <ruby><rt> 標籤（依照要求）。原本改用 <span> 排版是因為下載圖卡用的
+  // html2canvas 對原生 ruby 支援很差，這次改成讓 html2canvas 用 foreignObjectRendering
+  // 模式截圖（直接用瀏覽器自己的排版引擎去畫，而不是 html2canvas 自己重新計算），
+  // 這樣原生 <ruby><rt> 在截圖下載時也能正確顯示。
   return text.replace(/([一-龯々ヶ]+)[（(]([ぁ-んァ-ヶー]+)[）)]/g,"<ruby>$1<rt>$2</rt></ruby>");
+}
+function formatMainText(main){
+  // main 裡如果有多句例句（用 ▪️例1／▪️例2 這種標記分行），逐行分開顯示、加上編號小標籤，不要黏在一起
+  const lines = String(main||'').split('\n').filter(l=>l.trim()!=='');
+  if(lines.length<=1) return convertToRuby(main||'');
+  return lines.map(l=>{
+    const m = l.trim().match(/^▪️?\s*(例\s*\d+)\s*[:：、　]?\s*(.*)$/);
+    if(m) return '<div class="example-line"><span class="example-badge">▪️'+escapeHtml(m[1])+'</span>'+convertToRuby(m[2])+'</div>';
+    return '<div class="example-line">'+convertToRuby(l.trim())+'</div>';
+  }).join('');
 }
 function cleanNote(s){
   if(!s) return "";
@@ -668,14 +832,14 @@ function renderCardEditors(day){
   const p = state.posts[day];
   const box = document.getElementById('cardEditors');
   const labels = ["① 封面卡","② 基礎例句","③ 進階例句","④ 實戰例句"];
-  const mainPh = ["大標題（關鍵字，可用「漢字(かな)」標假名）","基礎例句日文","進階例句日文","實戰例句日文"];
+  const mainPh = ["大標題（關鍵字，可用「漢字(かな)」標假名，讀音錯了直接改括號裡的假名即可）","基礎例句日文（漢字後面用「漢字(かな)」標讀音；不只一句就換行寫，每行開頭加「▪️例1」「▪️例2」）","進階例句日文（同上：漢字(かな) 標讀音／多句用▪️例1▪️例2分行）","實戰例句日文（同上：漢字(かな) 標讀音／多句用▪️例1▪️例2分行）"];
   const titlePh = ["標籤（例：慣用句）","小標題","小標題","小標題"];
   const notePh = ["副標說明","中文翻譯","中文翻譯","中文翻譯"];
   box.innerHTML = p.cards.map((c,idx)=>`
     <div class="card-edit-box" data-idx="${idx}">
       <div class="ce-label">${labels[idx]}</div>
       <input class="ce-title" placeholder="${titlePh[idx]}" value="${escapeAttr(c.title)}">
-      <input class="ce-main" placeholder="${mainPh[idx]}" value="${escapeAttr(c.main)}">
+      <textarea class="ce-main" placeholder="${mainPh[idx]}" style="min-height:52px;resize:vertical;font-family:inherit;">${escapeHtml(c.main)}</textarea>
       <textarea class="ce-note" placeholder="${notePh[idx]}">${escapeAttr(c.note)}</textarea>
     </div>
   `).join('');
@@ -685,6 +849,100 @@ function renderCardEditors(day){
     el.querySelector('.ce-main').addEventListener('input', e=>{ state.posts[current].cards[idx].main = e.target.value; onCardEdit(); });
     el.querySelector('.ce-note').addEventListener('input', e=>{ state.posts[current].cards[idx].note = e.target.value; onCardEdit(); });
   });
+}
+function computeCardsFromContent(day){
+  // 純計算：只更新 state.posts[day].cards，不做任何 save/render/toast，讓單篇跟批次都能共用
+  ensureCards(day);
+  const p = state.posts[day];
+  const text = p.content || '';
+  if(!text.trim()) return false;
+  const lines = text.split('\n').map(l=>l.trim());
+
+  // 關鍵字：優先用「主題」欄位（最準），其次抓內文裡的「...」，再來是【...】（不限定要整行只有它），
+  // 最後才用第一行去掉開頭問候語之後剩下的文字當保底猜測，確保這欄不會整個空著
+  let keyword = '';
+  if(p.topic && p.topic.trim()) keyword = p.topic.trim();
+  if(!keyword){
+    const kwMatch = text.match(/「(.+?)」/) || text.match(/【(.+?)】/);
+    if(kwMatch) keyword = kwMatch[1];
+  }
+  if(!keyword){
+    const firstLine = (lines.find(l=>l) || '').replace(/^(朋友們[^，,。〜~]*[，,]|哈囉大家好[，,]|今天想跟大家分享(的?)|今天的日語小教室[，,]?)/,'').trim();
+    if(firstLine) keyword = firstLine.replace(/^[：:、,，]/,'').slice(0,14).replace(/[。！～〜].*$/,'').trim();
+  }
+
+  // 定義說明：緊接在【關鍵字】那一行後面、用括號包起來的那一行（找不到整行【】就找第一個含【】的行）
+  let definition = '';
+  let kwLineIdx = lines.findIndex(l=>/^【.+】$/.test(l));
+  if(kwLineIdx<0) kwLineIdx = lines.findIndex(l=>/【.+】/.test(l));
+  if(kwLineIdx>=0){
+    for(let i=kwLineIdx+1;i<lines.length;i++){
+      if(!lines[i]) continue;
+      const m = lines[i].match(/^[（(](.+)[）)]$/);
+      if(m) definition = m[1];
+      break;
+    }
+    if(definition.length>60) definition = definition.slice(0,58) + '…';
+  }
+
+  // 例句：抓看起來像日文例句（含假名/漢字、以。或！結尾）的行，最多取3句；下一行若像中文翻譯就一起帶走
+  // 如果一行裡其實塞了不只一句日文例句（中間也有。或！），拆開來、各自標上▪️例1／▪️例2，不要黏成一坨
+  const jpRe = /[぀-ヿ一-鿿]/;
+  const skipRe = /^(朋友們|哈囉大家好|今天想跟大家分享|【|例句|延伸|感謝|＿|◼|❤️|http)/;
+  function splitSentences(s){
+    return s.split(/(?<=[。！])(?=\S)/).map(x=>x.trim()).filter(Boolean);
+  }
+  function formatExampleGroup(sentences){
+    if(sentences.length<=1) return sentences[0] || '';
+    return sentences.map((s,idx)=>'▪️例'+(idx+1)+'　'+s).join('\n');
+  }
+  const examples = [];
+  for(let i=0;i<lines.length && examples.length<3;i++){
+    const l = lines[i];
+    if(!l || skipRe.test(l)) continue;
+    if(jpRe.test(l) && /[。！]$/.test(l) && !/^[（(]/.test(l)){
+      const sentences = splitSentences(l);
+      const next = lines[i+1] || '';
+      const nextIsTranslation = next && !jpRe.test(next.replace(/[（）()]/g,''));
+      let noteText = '';
+      if(nextIsTranslation){
+        const noteSentences = splitSentences(next.replace(/^[（(]|[）)]$/g,''));
+        noteText = (noteSentences.length===sentences.length) ? formatExampleGroup(noteSentences) : next.replace(/^[（(]|[）)]$/g,'');
+      }
+      // 翻譯太長容易在圖卡裡爆版、蓋到logo，超過一定長度就截斷加刪節號
+      if(noteText.length>60) noteText = noteText.slice(0,58) + '…';
+      examples.push({ main: formatExampleGroup(sentences), note: noteText });
+      if(nextIsTranslation) i++;
+    }
+  }
+
+  p.cards[0] = { title: p.cards[0].title || '慣用句', main: keyword || p.cards[0].main, note: definition || p.cards[0].note };
+  const labels = ['基礎例句','進階例句','實戰例句'];
+  for(let k=0;k<3;k++){
+    if(examples[k]){
+      p.cards[k+1] = { title: p.cards[k+1].title || labels[k], main: examples[k].main, note: examples[k].note || p.cards[k+1].note };
+    }
+  }
+  return true;
+}
+function autoFillCardsFromContent(day){
+  const ok = computeCardsFromContent(day);
+  if(!ok){ showToast('這一天還沒有內容，先寫一點文字再產生圖卡預設內容'); return; }
+  save();
+  renderCardEditors(day);
+  renderCardsPreview(day);
+  showToast('🪄 已根據本篇文字產生圖卡DEFAULT內容，記得檢查一下、有需要再手動調整');
+}
+function autoFillCardsForAll(){
+  saveCurrentFromUI();
+  let count = 0;
+  for(let i=1;i<=TOTAL;i++){
+    if(computeCardsFromContent(i)) count++;
+  }
+  save();
+  renderCardEditors(current);
+  renderCardsPreview(current);
+  showToast(count>0 ? `🪄 已幫 ${count} 天各自產生圖卡DEFAULT內容，記得逐篇檢查一下` : '目前 30 天都還是空的');
 }
 let cardRenderTimer = null;
 function onCardEdit(){
@@ -718,7 +976,7 @@ function onThemeSelectChange(){
 }
 
 function generateCardCSS(theme){
-  return '@import url(\'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap\');:root { --primary:'+theme.primary+'; --accent:'+theme.accent+'; --card-bg:'+theme.cardBg+'; --inner-bg:#fdfbf6; --shadow-color:rgba(0,0,0,0.2); --text:#3a3226; --paper-border:#eaddc5; }*{box-sizing:border-box}html,body{margin:0;padding:0;font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;font-weight:400;color:#334155;background:#f8fafc;}.kotanuki-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;padding:16px;justify-items:center;}.ig-card{container-type:inline-size;width:100%;max-width:300px;aspect-ratio:1/1;border-radius:8px;background-color:var(--card-bg);background-image:'+getSvgUrl(theme.svg, theme.primary)+';background-size:'+theme.size+';background-position:center;background-repeat:repeat;border:8px solid #f7f2e6;box-shadow:2px 4px 12px var(--shadow-color);display:flex;flex-direction:column;overflow:hidden;position:relative;margin:0 auto}.card-header{padding:4cqi 5cqi 0 5cqi;display:flex;align-items:center;flex-shrink:0;z-index:2;gap:3cqi}.header-badge{background:var(--primary);color:#fff;font-weight:600;font-size:5cqi;width:9cqi;height:9cqi;border-radius:4px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.15);flex-shrink:0;}.header-title{font-size:4.5cqi;font-weight:600;color:var(--primary);background:#fff;padding:1.5cqi 3.5cqi;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.08);white-space:nowrap;letter-spacing:0.05em;}.card-body{flex-grow:1;display:flex;flex-direction:column;justify-content:center;padding:1cqi 5cqi 10cqi 5cqi;z-index:2;position:relative}.text-bg{background:var(--inner-bg);padding:5cqi 5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);position:relative;text-align:center;width:96%;max-width:100%;margin:0 auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box !important; word-break:normal !important; overflow-wrap:break-word !important;}.fa-icon{font-size:8cqi;display:block;margin:0 auto 2cqi auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1));opacity:0.9;}.text-primary{color:var(--primary)} .text-accent{color:var(--accent)}.main-text{font-size:7.8cqi;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:2cqi;letter-spacing:0.02em;word-break:normal !important; overflow-wrap:break-word !important;}.note-box{margin-top:3cqi;line-height:1.5;color:#594d3c;font-weight:400;text-align:justify;font-size:4.8cqi;padding:0 2cqi;position:relative;z-index:2;}ruby{font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;}rt{font-size:0.48em;color:var(--primary);font-weight:600;text-align:center;}.cover-body{align-items:center;text-align:center;padding-top:6cqi;padding-bottom:12cqi}.cover-title{font-size:11.5cqi;color:var(--primary);font-weight:600;margin-bottom:3cqi;letter-spacing:0.02em;line-height:1.25;margin-top:2cqi;word-break:normal !important; overflow-wrap:break-word !important;}.tag-pill{display:inline-block;background:var(--accent);color:white;padding:1.5cqi 5cqi;border-radius:2px;font-size:4.5cqi;font-weight:500;margin-top:3cqi;margin-bottom:4cqi;box-shadow:1px 2px 4px rgba(0,0,0,0.15);letter-spacing:0.05em;position:relative;}.cover-desc{font-size:5.5cqi;color:var(--text);font-weight:400;line-height:1.6;background:var(--inner-bg);padding:4.5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);width:96%;margin:0 auto;text-align:center;box-sizing:border-box !important;}.logo-footer{position:absolute;left:0;right:0;bottom:3cqi;z-index:10;display:flex;justify-content:center;pointer-events:none;}';
+  return '@import url(\'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap\');:root { --primary:'+theme.primary+'; --accent:'+theme.accent+'; --card-bg:'+theme.cardBg+'; --inner-bg:#fdfbf6; --shadow-color:rgba(0,0,0,0.2); --text:#3a3226; --paper-border:#eaddc5; }*{box-sizing:border-box}html,body{margin:0;padding:0;font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;font-weight:400;color:#334155;background:#f8fafc;}.kotanuki-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;padding:16px;justify-items:center;}.ig-card{container-type:inline-size;width:100%;max-width:300px;aspect-ratio:1/1;border-radius:8px;background-color:var(--card-bg);background-image:'+getSvgUrl(theme.svg, theme.primary)+';background-size:'+theme.size+';background-position:center;background-repeat:repeat;border:8px solid #f7f2e6;box-shadow:2px 4px 12px var(--shadow-color);display:flex;flex-direction:column;overflow:hidden;position:relative;margin:0 auto}.card-header{padding:4cqi 5cqi 0 5cqi;display:flex;align-items:center;flex-shrink:0;z-index:2;gap:3cqi}.header-badge{background:var(--primary);color:#fff;font-weight:600;font-size:5cqi;width:9cqi;height:9cqi;border-radius:4px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.15);flex-shrink:0;}.header-title{font-size:4.5cqi;font-weight:600;color:var(--primary);background:#fff;padding:1.5cqi 3.5cqi;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.08);white-space:nowrap;letter-spacing:0.05em;}.card-body{flex-grow:1;display:flex;flex-direction:column;justify-content:center;padding:1cqi 5cqi 10cqi 5cqi;z-index:2;position:relative;overflow:hidden;max-height:100%;}.text-bg{background:var(--inner-bg);padding:5cqi 5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);position:relative;text-align:center;width:96%;max-width:100%;max-height:78cqi;margin:0 auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box !important; word-break:normal !important; overflow-wrap:break-word !important; overflow:hidden;}.fa-icon{font-size:8cqi;display:block;margin:0 auto 2cqi auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1));opacity:0.9;}.text-primary{color:var(--primary)} .text-accent{color:var(--accent)}.main-text{font-size:7.8cqi;font-weight:500;color:var(--text);line-height:2.05;margin-bottom:2cqi;letter-spacing:0.02em;word-break:normal !important; overflow-wrap:break-word !important;}.example-line{margin-bottom:2.2cqi;}.example-badge{display:inline-block;font-size:0.62em;font-weight:700;color:var(--accent);margin-right:0.3em;}.note-box{margin-top:3cqi;line-height:1.4;color:#594d3c;font-weight:400;text-align:justify;font-size:4.4cqi;padding:0 2cqi;position:relative;z-index:2;max-height:19cqi;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;text-overflow:ellipsis;}ruby{font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;}rt{font-size:0.48em;color:var(--primary);font-weight:600;text-align:center;}.rb-wrap{display:inline-flex;flex-direction:column;align-items:center;vertical-align:bottom;line-height:1.1;margin:0 0.02em;}.rb-rt{font-size:0.42em;color:var(--primary);font-weight:600;line-height:1.3;white-space:nowrap;}.rb-base{line-height:1.25;}.cover-body{align-items:center;text-align:center;padding-top:6cqi;padding-bottom:12cqi}.cover-title{font-size:11.5cqi;color:var(--primary);font-weight:600;margin-bottom:3cqi;letter-spacing:0.02em;line-height:1.6;margin-top:2cqi;word-break:normal !important; overflow-wrap:break-word !important;}.tag-pill{display:inline-block;background:var(--accent);color:white;padding:1.5cqi 5cqi;border-radius:2px;font-size:4.5cqi;font-weight:500;margin-top:3cqi;margin-bottom:4cqi;box-shadow:1px 2px 4px rgba(0,0,0,0.15);letter-spacing:0.05em;position:relative;}.cover-desc{font-size:5.5cqi;color:var(--text);font-weight:400;line-height:1.5;background:var(--inner-bg);padding:4.5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);width:96%;margin:0 auto;text-align:center;box-sizing:border-box !important;max-height:22cqi;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;text-overflow:ellipsis;}.logo-footer{position:absolute;left:0;right:0;bottom:3cqi;z-index:10;display:flex;justify-content:center;pointer-events:none;}';
 }
 function generateCardsHTML(day){
   const p = ensureCards(day);
@@ -728,7 +986,7 @@ function generateCardsHTML(day){
   const c1 = cards[1] || {title:'基礎例句', main:'', note:''};
   const c2 = cards[2] || {title:'進階例句', main:'', note:''};
   const c3 = cards[3] || {title:'實戰例句', main:'', note:''};
-  return '<div class="ig-card" id="card-0"><div class="card-header"><div class="header-badge">01</div><div class="header-title">這個字，小狸日語教你用</div></div><div class="card-body cover-body"><span class="tag-pill">' + escapeHtml(c0.title||'慣用句') + '</span><div class="cover-title">' + convertToRuby(c0.main||word) + '</div><div class="cover-desc">' + escapeHtml(cleanNote(c0.note)) + '</div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-1"><div class="card-header"><div class="header-badge">02</div><div class="header-title">' + escapeHtml(c1.title||'基礎例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,1) + ' fa-icon text-primary"></i><div class="main-text">' + convertToRuby(c1.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c1.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-2"><div class="card-header"><div class="header-badge">03</div><div class="header-title">' + escapeHtml(c2.title||'進階例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,2) + ' fa-icon text-accent"></i><div class="main-text">' + convertToRuby(c2.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c2.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-3"><div class="card-header"><div class="header-badge">04</div><div class="header-title">' + escapeHtml(c3.title||'實戰例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,3) + ' fa-icon text-primary"></i><div class="main-text">' + convertToRuby(c3.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c3.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div>';
+  return '<div class="ig-card" id="card-0"><div class="card-header"><div class="header-badge">01</div><div class="header-title">這個字，小狸日語教你用</div></div><div class="card-body cover-body"><span class="tag-pill">' + escapeHtml(c0.title||'慣用句') + '</span><div class="cover-title">' + convertToRuby(c0.main||word) + '</div><div class="cover-desc">' + escapeHtml(cleanNote(c0.note)) + '</div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-1"><div class="card-header"><div class="header-badge">02</div><div class="header-title">' + escapeHtml(c1.title||'基礎例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,1) + ' fa-icon text-primary"></i><div class="main-text">' + formatMainText(c1.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c1.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-2"><div class="card-header"><div class="header-badge">03</div><div class="header-title">' + escapeHtml(c2.title||'進階例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,2) + ' fa-icon text-accent"></i><div class="main-text">' + formatMainText(c2.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c2.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-3"><div class="card-header"><div class="header-badge">04</div><div class="header-title">' + escapeHtml(c3.title||'實戰例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,3) + ' fa-icon text-primary"></i><div class="main-text">' + formatMainText(c3.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c3.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div>';
 }
 function buildCardDocHTML(day, withDownloadScript){
   const p = ensureCards(day);
@@ -744,7 +1002,7 @@ function buildCardDocHTML(day, withDownloadScript){
       + 'function __freezeCqiStyles(root){ var props=["fontSize","paddingTop","paddingRight","paddingBottom","paddingLeft","marginTop","marginRight","marginBottom","marginLeft","letterSpacing","lineHeight","width","height","minWidth","minHeight","maxWidth","maxHeight","borderRadius","top","left","right","bottom","gap"]; var all=[root].concat(Array.prototype.slice.call(root.querySelectorAll("*"))); var originals=all.map(function(el){ return {el:el, cssText:el.style.cssText}; }); all.forEach(function(el){ var cs=window.getComputedStyle(el); props.forEach(function(p){ try{ el.style[p]=cs[p]; }catch(e){} }); }); return function(){ originals.forEach(function(o){ o.el.style.cssText=o.cssText; }); }; }'
       + 'async function dlCards(){ const cards=document.querySelectorAll(".ig-card"); for(let i=0;i<cards.length;i++){ const card=cards[i]; const origShadow=card.style.boxShadow; card.style.boxShadow="none";'
       + ' const restoreCqi = __freezeCqiStyles(card); await new Promise(r=>requestAnimationFrame(r));'
-      + ' try{ const canvas=await html2canvas(card,{scale:3,useCORS:true,backgroundColor:null,logging:false}); const link=document.createElement("a"); link.download=__fileWord+(i+1)+".jpg"; link.href=canvas.toDataURL("image/jpeg",0.95); link.click(); await new Promise(r=>setTimeout(r,450)); }catch(e){console.error(e);}finally{ card.style.boxShadow=origShadow; restoreCqi(); } } }'
+      + ' try{ const canvas=await html2canvas(card,{scale:3,useCORS:true,backgroundColor:null,logging:false,foreignObjectRendering:true}); const link=document.createElement("a"); link.download=__fileWord+(i+1)+".jpg"; link.href=canvas.toDataURL("image/jpeg",0.95); link.click(); await new Promise(r=>setTimeout(r,450)); }catch(e){console.error(e);}finally{ card.style.boxShadow=origShadow; restoreCqi(); } } }'
       + '<\/script>';
   }
   doc += '</body></html>';
@@ -782,7 +1040,7 @@ async function renderCardBlobs(day){
     const topic = (state.posts[day].topic || ('day'+day)).replace(/[\\/:*?"<>|]/g,'').slice(0,20) || ('day'+day);
     const out = [];
     for(let i=0;i<cardEls.length;i++){
-      const canvas = await html2canvas(cardEls[i], {scale:2, useCORS:true, backgroundColor:null, logging:false});
+      const canvas = await html2canvas(cardEls[i], {scale:2, useCORS:true, backgroundColor:null, logging:false, foreignObjectRendering:true});
       const blob = await new Promise(res=>canvas.toBlob(b=>res(b), 'image/jpeg', 0.92));
       out.push({ filename: `Day${String(day).padStart(2,'0')}_${topic}_${i+1}.jpg`, blob });
     }
@@ -887,7 +1145,7 @@ function parseIntoRecyclePool(){
   save();
   document.getElementById('recycleArea').value = '';
   renderRecyclePool();
-  showToast(added>0 ? `✅ 已加入回收區 ${added} 篇（尚未指派到任何一天）` : '沒有解析到任何內容');
+  showToast(added>0 ? `✅ 已加入回收區 ${added} 篇（獨立存放，不會動到30天排程）` : '沒有解析到任何內容');
 }
 function renderRecyclePool(){
   const listEl = document.getElementById('recyclePoolList');
@@ -898,51 +1156,47 @@ function renderRecyclePool(){
     listEl.innerHTML = '<div style="font-size:12.5px;color:var(--ink-3);padding:10px 2px;">回收區目前是空的，貼上舊文並按「解析加入回收區」試試看。</div>';
     return;
   }
-  listEl.innerHTML = state.recyclePool.map(item=>{
-    const preview = escapeHtml(item.content.slice(0,60).replace(/\n/g,' ')) + (item.content.length>60?'…':'');
-    const imgBadge = item.imageUrl ? `<span style="font-size:10.5px;color:var(--ink-3);">🖼 有圖</span>` : `<span style="font-size:10.5px;color:var(--ink-3);">無圖</span>`;
-    return `<div style="border:1.5px solid var(--border);border-radius:10px;padding:9px 10px;background:var(--paper-2);">
-      <div style="font-size:12.5px;color:var(--ink);line-height:1.6;margin-bottom:6px;">${preview}</div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        ${imgBadge}
-        <label style="font-size:11.5px;color:var(--ink-2);margin-left:auto;">指派到第
-          <input type="number" min="1" max="${TOTAL}" value="${nextEmptyDay()}" id="assignDay_${item.id}" style="width:48px;border:1.5px solid var(--border);border-radius:6px;background:var(--paper);padding:3px 5px;font-size:12px;color:var(--ink);outline:none;">
-        天</label>
-        <button class="btn primary" style="font-size:11px;padding:5px 9px;" onclick="assignRecycleItem('${item.id}')">指派</button>
-        <button class="btn ghost" style="font-size:11px;padding:5px 9px;" onclick="removeRecycleItem('${item.id}')">🗑</button>
+  listEl.innerHTML = state.recyclePool.map(item=>`
+    <div style="border:1.5px solid var(--border);border-radius:10px;padding:9px 10px;background:var(--paper-2);">
+      <textarea class="recycle-item-ta" data-id="${item.id}" style="width:100%;min-height:64px;resize:vertical;border:1.5px solid var(--border);border-radius:8px;background:var(--paper);padding:7px 9px;font-size:12.5px;color:var(--ink);outline:none;font-family:inherit;line-height:1.6;">${escapeHtml(item.content)}</textarea>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;">
+        <input type="text" class="recycle-item-img" data-id="${item.id}" value="${escapeAttr(item.imageUrl)}" placeholder="圖片網址（選填）" style="flex:1;min-width:160px;border:1.5px solid var(--border);border-radius:8px;background:var(--paper);padding:6px 8px;font-size:11.5px;color:var(--ink);outline:none;">
+        <button class="btn ghost" style="font-size:11px;padding:5px 9px;" onclick="removeRecycleItem('${item.id}')">🗑 刪除</button>
       </div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
+  listEl.querySelectorAll('.recycle-item-ta').forEach(el=>{
+    el.addEventListener('input', e=>{ updateRecycleItem(e.target.getAttribute('data-id'), 'content', e.target.value); });
+  });
+  listEl.querySelectorAll('.recycle-item-img').forEach(el=>{
+    el.addEventListener('input', e=>{ updateRecycleItem(e.target.getAttribute('data-id'), 'imageUrl', e.target.value); });
+  });
 }
-function nextEmptyDay(){
-  for(let i=1;i<=TOTAL;i++){ if(!(state.posts[i].content && state.posts[i].content.trim())) return i; }
-  return 1;
-}
-function assignRecycleItem(id){
+function updateRecycleItem(id, field, value){
   const item = state.recyclePool.find(x=>x.id===id);
   if(!item) return;
-  const input = document.getElementById('assignDay_'+id);
-  let day = Number(input.value) || 0;
-  if(day<1 || day>TOTAL){ showToast('請輸入 1～30 之間的天數'); return; }
-  const existing = state.posts[day];
-  if(existing.content && existing.content.trim()){
-    showToast(`⚠️ 第 ${day} 天已經有內容了，不會覆蓋。請先清空那一天，或指派到別天。`);
-    return;
-  }
-  existing.content = item.content;
-  existing.imageUrl = item.imageUrl;
-  if(!existing.topic){ existing.topic = item.content.slice(0,16).replace(/\n/g,' '); }
-  state.recyclePool = state.recyclePool.filter(x=>x.id!==id);
+  item[field] = value;
   save();
-  renderList();
-  renderRecyclePool();
-  selectDay(day);
-  showToast(`✅ 已指派到第 ${day} 天`);
 }
 function removeRecycleItem(id){
   state.recyclePool = state.recyclePool.filter(x=>x.id!==id);
   save();
   renderRecyclePool();
+}
+function downloadRecycleCsv(){
+  if(state.recyclePool.length===0){ showToast('回收區目前是空的'); return; }
+  let rows = [ ['Text','Image URL','Tags','Posting Time'] ];
+  let missingImage = 0;
+  state.recyclePool.forEach(item=>{
+    if(!item.content || !item.content.trim()) return;
+    const img = (item.imageUrl||'').trim();
+    if(!img) missingImage++;
+    rows.push([item.content.trim(), img, '', '']);
+  });
+  if(rows.length===1){ showToast('回收區目前是空的'); return; }
+  const csv = rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  triggerDownload(blob, 'kori_recycle_bulk_upload_' + todayStr() + '.csv');
+  showToast(missingImage>0 ? `⬇️ 回收區 .csv 已下載（有 ${missingImage} 篇還沒填圖片網址）` : '⬇️ 回收區 .csv 已下載（符合 Buffer Bulk Upload 官方格式）');
 }
 function clearRecyclePool(){
   if(state.recyclePool.length===0) return;
@@ -977,7 +1231,7 @@ async function bulkDownloadImages(){
       const cardEls = doc.querySelectorAll('.ig-card');
       const topic = (state.posts[day].topic || ('day'+day)).replace(/[\\/:*?"<>|]/g,'').slice(0,20) || ('day'+day);
       for(let i=0;i<cardEls.length;i++){
-        const canvas = await html2canvas(cardEls[i], {scale:2, useCORS:true, backgroundColor:null, logging:false});
+        const canvas = await html2canvas(cardEls[i], {scale:2, useCORS:true, backgroundColor:null, logging:false, foreignObjectRendering:true});
         const blob = await new Promise(res=>canvas.toBlob(b=>res(b), 'image/jpeg', 0.92));
         zip.file(`Day${String(day).padStart(2,'0')}_${topic}/${topic}${i+1}.jpg`, blob);
       }
@@ -1225,12 +1479,19 @@ function buildBatchPrompt(topicsBlock){
 ━━ 語氣範本（請嚴格模仿這篇的口吻、標點習慣、段落結構，但每篇用詞不要一模一樣，要自然變化）━━
 ${TONE_SAMPLE}
 
-━━ 開頭固定格式（每一篇都必須用這句當第一行，不能省略或改寫）━━
-朋友們好，今天來跟小狸老師學〇〇〜
-（把〇〇換成這篇的主題／關鍵字本身，其餘一字不改）
+━━ 開頭固定格式（每一篇第一行都必須是下面其中一種句型，不能省略「」也不能省略關鍵字，30篇要輪流換、不能每篇都用同一種，而且每一篇的第一行都一定要出現「小狸老師」或「小狸日語」其中一個）━━
+朋友們早安，今天來跟小狸老師學「〇〇」。
+朋友們好，今天來跟小狸老師學「〇〇」〜
+朋友們好，今天小狸日語來跟你分享：「〇〇」
+朋友們好，這句「〇〇」你聽過嗎？今天來跟小狸老師學起來〜
+哈囉大家好，小狸日語今天想跟你聊聊這句「〇〇」
+朋友們好，小狸老師今天想教大家這句「〇〇」〜
+今天想跟大家分享一句很實用的說法：「〇〇」，來跟小狸老師一起學起來〜
+朋友們早安，小狸日語今天的日語小教室，來看看「〇〇」怎麼用〜
+（把〇〇換成這篇的主題／關鍵字本身，「」這兩個引號一定要保留、把關鍵字放在裡面，其餘文字一字不改）
 
 ━━ 語氣重點 ━━
-- 關鍵字/重點用【】標出，需要標假名的漢字用「漢字(かな)」格式
+- 關鍵字/重點用【】標出；只有漢字才需要加假名標註、用「漢字(かな)」格式——只有假名、沒有漢字的地方絕對不要加ruby假名標註，也不要整個詞硬套上不必要的括號
 - 括號說明用全形空格縮排，語氣輕鬆口語
 - 適時使用「～～～」「喔！」等語尾製造親切感，但不要每句都用，抓自然的頻率
 - 例句、延伸等段落用小標題分段（例如「例句」「延伸」），標題不要加任何符號
@@ -1250,13 +1511,13 @@ ${TONE_SAMPLE}
 ━━ 30 天主題安排 ━━
 ${topicsBlock}
 
-━━ IG 圖卡欄位（cards，每一天都要）━━
+━━ IG 圖卡欄位（cards，每一天都要，4張都要有完整內容，不能留空）━━
 除了貼文正文，還要幫每一天額外準備 4 張 IG 圖卡的素材，放在 cards 陣列裡，依序是：
-cards[0] 封面卡 → title=分類標籤（例：慣用句/ことわざ/四字熟語）, main=關鍵字本身（漢字需要標假名時用「漢字(かな)」格式）, note=一句話中文意思
-cards[1] 基礎例句卡 → title="基礎例句", main=最簡短、最基礎的日文例句（加假名標註，10字以內), note=中文翻譯（不加括號）
-cards[2] 進階例句卡 → title="進階例句", main=情境更豐富、中等難度的日文例句（加假名標註，15字左右）, note=中文翻譯
-cards[3] 實戰例句卡 → title="實戰例句", main=最接近母語者說法、可以有轉折或補充語氣的日文例句（加假名標註，20～30字）, note=中文翻譯
-三張例句卡的長度與難度要明顯遞增：短→中→長，不能三句都差不多長。
+cards[0] 封面卡 → title=分類標籤（例：慣用句/ことわざ/四字熟語）, main=關鍵字本身（只有漢字才用「漢字(かな)」格式標假名，純假名的字不要加括號標音）, note=一句話中文意思
+cards[1] 基礎例句卡 → title="基礎例句", main=最簡短、最基礎的日文例句（句子裡每個漢字詞都要用「漢字(かな)」標假名，純假名處不要加括號，10字以內), note=中文翻譯（不加括號）
+cards[2] 進階例句卡 → title="進階例句", main=情境更豐富、中等難度的日文例句（同樣只在漢字處用「漢字(かな)」標假名，15字左右）, note=中文翻譯
+cards[3] 實戰例句卡 → title="實戰例句", main=最接近母語者說法、可以有轉折或補充語氣的日文例句（同樣只在漢字處用「漢字(かな)」標假名，20～30字）, note=中文翻譯
+三張例句卡的長度與難度要明顯遞增：短→中→長，不能三句都差不多長。cards[0]～cards[3] 這4張一定都要生成完整內容，不可以有任何一張是空的或省略。
 
 ━━ 輸出格式 ━━
 純 JSON 陣列，直接以 [ 開頭、以 ] 結尾，不要有 markdown 符號或任何其他文字。每個元素包含：
