@@ -835,14 +835,19 @@ function renderCardEditors(day){
   const mainPh = ["大標題（關鍵字，可用「漢字(かな)」標假名，讀音錯了直接改括號裡的假名即可）","基礎例句日文（漢字後面用「漢字(かな)」標讀音；不只一句就換行寫，每行開頭加「▪️例1」「▪️例2」）","進階例句日文（同上：漢字(かな) 標讀音／多句用▪️例1▪️例2分行）","實戰例句日文（同上：漢字(かな) 標讀音／多句用▪️例1▪️例2分行）"];
   const titlePh = ["標籤（例：慣用句）","小標題","小標題","小標題"];
   const notePh = ["副標說明","中文翻譯","中文翻譯","中文翻譯"];
-  box.innerHTML = p.cards.map((c,idx)=>`
+  box.innerHTML = p.cards.map((c,idx)=>{
+    const hasKanji = /[一-龯々ヶ]/.test(c.main||'');
+    const hasFurigana = /[一-龯々ヶ]+[（(][ぁ-んァ-ヶー]+[）)]/.test(c.main||'');
+    const rubyWarning = (hasKanji && !hasFurigana) ? '<div style="font-size:11px;color:#b45309;margin-bottom:4px;">⚠️ 這句還沒有「漢字(かな)」標讀音，Ruby不會顯示，可以按上面的「🔤自動加注音」或手動加</div>' : '';
+    return `
     <div class="card-edit-box" data-idx="${idx}">
       <div class="ce-label">${labels[idx]}</div>
+      ${rubyWarning}
       <input class="ce-title" placeholder="${titlePh[idx]}" value="${escapeAttr(c.title)}">
       <textarea class="ce-main" placeholder="${mainPh[idx]}" style="min-height:52px;resize:vertical;font-family:inherit;">${escapeHtml(c.main)}</textarea>
       <textarea class="ce-note" placeholder="${notePh[idx]}">${escapeAttr(c.note)}</textarea>
     </div>
-  `).join('');
+  `;}).join('');
   box.querySelectorAll('.card-edit-box').forEach(el=>{
     const idx = Number(el.getAttribute('data-idx'));
     el.querySelector('.ce-title').addEventListener('input', e=>{ state.posts[current].cards[idx].title = e.target.value; onCardEdit(); });
