@@ -1,2646 +1,1334 @@
 <!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
-<link rel="manifest" href="./site.webmanifest">
-  <title>方格子風格｜本地部落格編輯器 Pro（含公開頁路由）</title>
+<title>三十日貼文工坊</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#FBF6EA; --paper:#FFFFFF; --paper-2:#FDF9F0;
+  --ink:#2C241A; --ink-2:#6B5D48; --ink-3:#A99B82;
+  --border:#E9DEC7; --border-2:#D8C9A8;
+  --primary:#2F4B7A; --primary-ghost:#EAF0FB;
+  --accent:#E0577A; --accent-ghost:#FDECF1;
+  --gold:#C89A3E; --gold-ghost:#FBF2DE;
+  --matcha:#4C8B6B; --matcha-ghost:#EAF5EF;
+  --danger:#C6494A; --danger-ghost:#FBEAEA;
+  --shadow: 0 10px 30px -12px rgba(44,36,26,0.22);
+  --shadow-sm: 0 3px 10px -4px rgba(44,36,26,0.18);
+  --r-sm:8px; --r-md:14px; --r-lg:22px;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1C1812; --paper:#25201A; --paper-2:#2B241D;
+    --ink:#F1E9DA; --ink-2:#C6B89E; --ink-3:#8A7C64;
+    --border:#3C332687; --border-2:#4A3F30;
+    --primary:#7EA1E0; --primary-ghost:#25324A;
+    --accent:#F08AA0; --accent-ghost:#3A2530;
+    --gold:#E0BB6E; --gold-ghost:#3A3020;
+    --matcha:#8FC7A8; --matcha-ghost:#22322A;
+    --danger:#E58A8B; --danger-ghost:#3A2323;
+    --shadow: 0 10px 30px -12px rgba(0,0,0,0.5);
+    --shadow-sm: 0 3px 10px -4px rgba(0,0,0,0.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1C1812; --paper:#25201A; --paper-2:#2B241D;
+  --ink:#F1E9DA; --ink-2:#C6B89E; --ink-3:#8A7C64;
+  --border:#3C332687; --border-2:#4A3F30;
+  --primary:#7EA1E0; --primary-ghost:#25324A;
+  --accent:#F08AA0; --accent-ghost:#3A2530;
+  --gold:#E0BB6E; --gold-ghost:#3A3020;
+  --matcha:#8FC7A8; --matcha-ghost:#22322A;
+  --danger:#E58A8B; --danger-ghost:#3A2323;
+  --shadow: 0 10px 30px -12px rgba(0,0,0,0.5);
+  --shadow-sm: 0 3px 10px -4px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;line-height:1.6;
+  background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:22px 22px;}
+h1,h2,h3,.disp{font-family:'Zen Maru Gothic','Noto Sans TC',sans-serif;}
+.mono{font-family:'DM Mono',monospace;}
+button{font-family:inherit;cursor:pointer;}
+::selection{background:var(--accent-ghost);}
 
-  <!-- Toast UI Editor -->
-  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
-  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor-dark.min.css" />
+/* ===== header ===== */
+.topbar{position:sticky;top:0;z-index:50;background:var(--paper);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm);}
+.topbar-inner{max-width:1400px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto;}
+.brand .mark{font-size:26px;}
+.brand h1{margin:0;font-size:19px;font-weight:900;color:var(--primary);letter-spacing:.02em;}
+.brand .sub{font-size:12px;color:var(--ink-3);font-weight:500;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{border:1.5px solid var(--border-2);background:var(--paper);color:var(--ink);border-radius:999px;
+  padding:8px 15px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:7px;
+  transition:.15s var(--ease);}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm);}
+.btn:active{transform:translateY(0);}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#2C2410;}
+.btn.ghost{background:var(--primary-ghost);border-color:transparent;color:var(--primary);}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;}
 
-  <!-- Free fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=M+PLUS+Rounded+1c:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+/* ===== layout ===== */
+.layout{max-width:1400px;margin:0 auto;padding:22px;display:grid;grid-template-columns:280px 1fr;gap:22px;align-items:start;}
+.panel{background:var(--paper);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;}
+.panel-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--paper-2);}
+.panel-head h2{margin:0;font-size:13px;font-weight:900;color:var(--ink-2);letter-spacing:.03em;}
+.progress-pill{font-size:11px;font-weight:700;background:var(--matcha-ghost);color:var(--matcha);padding:3px 9px;border-radius:99px;}
 
-  <style>
-    :root{
-      --app-bg:#f6f7fb;
-      --panel-bg:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --border:#e2e8f0;
-      --primary:#2563eb;
-      --pink:#db2777;
-      --danger:#ef4444;
+/* ===== day list ===== */
+.day-list{max-height:calc(100vh - 170px);overflow-y:auto;padding:8px;}
+.day-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);cursor:pointer;
+  border:1px solid transparent;transition:.12s;margin-bottom:2px;}
+.day-item:hover{background:var(--paper-2);}
+.day-item.active{background:var(--primary-ghost);border-color:var(--primary);}
+.day-num{flex-shrink:0;width:26px;height:26px;border-radius:8px;background:var(--paper-2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--ink-3);}
+.day-item.active .day-num{background:var(--primary);color:#fff;border-color:var(--primary);}
+.day-item.done .day-num{background:var(--matcha-ghost);color:var(--matcha);border-color:var(--matcha);}
+.day-item.active.done .day-num{background:var(--matcha);color:#fff;}
+.day-meta{overflow:hidden;flex:1;}
+.day-title{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);}
+.day-preview{font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.day-copy-mini{flex-shrink:0;opacity:0;border:none;background:transparent;color:var(--ink-3);font-size:13px;padding:4px;border-radius:6px;}
+.day-item:hover .day-copy-mini{opacity:1;}
+.day-copy-mini:hover{background:var(--accent-ghost);color:var(--accent);}
 
-      --content-font-family:"Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
-      --content-font-size:16px;
-      --content-line-height:1.85;
+/* ===== editor ===== */
+.editor{padding:20px 22px;}
+.editor-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+.editor-title{display:flex;align-items:center;gap:10px;}
+.editor-title .badge{background:var(--gold);color:#2C2410;font-weight:900;font-size:12px;padding:5px 12px;border-radius:99px;}
+.editor-title input{border:none;background:transparent;font-size:17px;font-weight:900;color:var(--ink);font-family:'Zen Maru Gothic',sans-serif;
+  outline:none;border-bottom:2px dashed transparent;padding:2px 0;min-width:160px;}
+.editor-title input:focus{border-bottom-color:var(--accent);}
+.editor-title input::placeholder{color:var(--ink-3);font-weight:500;}
+.char-pill{font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:99px;background:var(--matcha-ghost);color:var(--matcha);border:1.5px solid transparent;white-space:nowrap;}
+.char-pill.warn{background:var(--gold-ghost);color:var(--gold);}
+.char-pill.danger{background:var(--danger-ghost);color:var(--danger);}
 
-      --topbar-h:60px;
-      --side-w:300px;
-      --toc-w:300px;
+.mini-toolbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.tb-btn{border:1.5px solid var(--border-2);background:var(--paper-2);color:var(--ink-2);border-radius:9px;
+  padding:6px 10px;font-size:12px;font-weight:700;transition:.13s;}
+.tb-btn:hover{background:var(--primary-ghost);color:var(--primary);border-color:var(--primary);}
 
-      --radius:16px;
-      --shadow: 0 10px 24px rgba(2,6,23,.08);
+.editor-wrap{position:relative;border:2px solid var(--border);border-radius:var(--r-md);background:var(--paper-2);overflow:hidden;transition:.15s;margin-bottom:14px;}
+.editor-wrap:focus-within{border-color:var(--primary);background:var(--paper);box-shadow:0 0 0 4px var(--primary-ghost);}
+textarea.editor-ta{width:100%;min-height:280px;border:none;background:transparent;outline:none;resize:vertical;
+  padding:16px;font-size:15px;line-height:1.85;color:var(--ink);font-family:'Noto Sans TC',sans-serif;}
+textarea.editor-ta::placeholder{color:var(--ink-3);}
 
-      /* 🔴 新增：頂部安全距離（避免功能列貼太上面點不到） */
-      --safeTop: 18px;
-      --safeTop: max(18px, env(safe-area-inset-top));
-    }
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.nav-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border-2);background:var(--paper);color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;font-size:14px;}
+.nav-btn:hover{border-color:var(--primary);color:var(--primary);}
 
-    body{
-      margin:0;
-      /* 🔴 新增：整個頁面往下留安全距離（不改結構） */
-      padding-top: var(--safeTop);
-      box-sizing: border-box;
+/* ===== reference sample ===== */
+.tone-sample{background:var(--gold-ghost);border:1.5px dashed var(--gold);border-radius:var(--r-md);padding:14px 16px;margin:0 0 20px;font-size:12.5px;color:var(--ink-2);}
+.tone-sample b{color:var(--ink);}
 
-      background:var(--app-bg);
-      color:var(--text);
-      font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans TC", sans-serif;
-    }
+/* ===== settings drawer ===== */
+.settings-body{display:none;flex-direction:column;gap:14px;padding:16px 18px;border-top:1px dashed var(--border-2);}
+.settings-body.open{display:flex;}
+.set-field label{display:block;font-size:11.5px;font-weight:900;color:var(--ink-3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+.set-field textarea{width:100%;min-height:76px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--paper-2);
+  padding:9px 11px;font-size:12.5px;font-family:inherit;color:var(--ink);resize:vertical;outline:none;}
+.set-field textarea:focus{border-color:var(--primary);}
+.toggle-row{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--ink-2);}
 
-    /* ---- topbar ---- */
-    .topbar{
-      height:var(--topbar-h);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:0 12px;
-      border-bottom:1px solid var(--border);
-      background:rgba(255,255,255,.85);
-      backdrop-filter: blur(10px);
-      position:sticky;
+/* ===== card mini editors ===== */
+.card-edit-box{background:var(--paper-2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 10px;margin-bottom:8px;}
+.card-edit-box .ce-label{font-size:10.5px;font-weight:900;color:var(--ink-3);margin-bottom:5px;}
+.card-edit-box input, .card-edit-box textarea{width:100%;border:1px solid var(--border);border-radius:6px;background:var(--paper);
+  padding:5px 7px;font-size:11.5px;color:var(--ink);font-family:inherit;outline:none;margin-bottom:5px;resize:vertical;}
+.card-edit-box textarea{min-height:38px;}
+.card-edit-box input:focus, .card-edit-box textarea:focus{border-color:var(--primary);}
 
-      /* 🔴 修改：從 top:0 改成安全距離 */
-      top:var(--safeTop);
+/* ===== emoji ===== */
+.emoji-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.emoji-btn{background:var(--paper-2);border:1.5px solid var(--border);border-radius:8px;font-size:16px;padding:4px 8px;transition:.12s;}
+.emoji-btn:hover{background:var(--accent-ghost);border-color:var(--accent);transform:scale(1.1);}
 
-      z-index:30;
-      gap:12px;
-      box-sizing:border-box;
-    }
-    .topbar .left, .topbar .right{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width:0;
-      flex-wrap:wrap;
-    }
+/* ===== modal ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,16,10,.55);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--paper);border-radius:var(--r-lg);padding:22px;width:100%;max-width:720px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow);position:relative;border:1px solid var(--border);}
+.modal-title{font-size:17px;font-weight:900;margin:0 0 14px;color:var(--ink);font-family:'Zen Maru Gothic',sans-serif;}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--paper-2);border:1px solid var(--border);border-radius:50%;width:30px;height:30px;font-size:16px;color:var(--ink-2);}
+.modal-p{font-size:13px;color:var(--ink-2);margin:0 0 12px;}
+textarea.modal-ta{width:100%;min-height:220px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--paper-2);
+  padding:12px;font-size:13px;font-family:'DM Mono',monospace;color:var(--ink);resize:vertical;outline:none;}
+textarea.modal-ta:focus{border-color:var(--primary);}
 
-    .btn{
-      border:1px solid var(--border);
-      background:#fff;
-      padding:8px 10px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:800;
-      color:var(--text);
-      white-space:nowrap;
-      user-select:none;
-    }
-    .btn:hover{ border-color:#cbd5e1; }
-    .btn.primary{
-      background:var(--primary);
-      border-color:var(--primary);
-      color:#fff;
-    }
-    .btn.soft{
-      background:#eff6ff;
-      border-color:#bfdbfe;
-      color:#1d4ed8;
-    }
-    .btn.danger{
-      background:#fff;
-      border-color:#fecaca;
-      color:var(--danger);
-    }
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--bg);
+  padding:10px 20px;border-radius:999px;font-weight:700;font-size:13px;opacity:0;visibility:hidden;transition:.22s;z-index:300;}
+#toast.show{opacity:1;visibility:visible;transform:translate(-50%,0);}
 
-    .pill{
-      font-size:12px;
-      padding:5px 10px;
-      border-radius:999px;
-      background:#eef2ff;
-      color:#3730a3;
-      border:1px solid #c7d2fe;
-      white-space:nowrap;
-      font-weight:900;
-    }
-    .pill.gray{
-      background:#f1f5f9;
-      border-color:#e2e8f0;
-      color:#334155;
-    }
-    .pill.green{
-      background:#ecfdf5;
-      border-color:#a7f3d0;
-      color:#065f46;
-    }
-    .pill.yellow{
-      background:#fffbeb;
-      border-color:#fde68a;
-      color:#92400e;
-    }
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;}
+  .day-list{max-height:280px;}
+}
+</style>
 
-    .title-input{
-      width:min(520px, 40vw);
-      max-width:100%;
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:10px 12px;
-      font-size:14px;
-      font-weight:900;
-      outline:none;
-      background:#fff;
-      min-width:180px;
-    }
+<div id="toast">已複製</div>
 
-    .select{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:8px 10px;
-      background:#fff;
-      font-weight:900;
-      color:var(--text);
-      cursor:pointer;
-    }
-
-    .fontSizeBox{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      padding:6px 8px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background:#fff;
-    }
-    .fontSizeBox .n{
-      width:36px;
-      text-align:center;
-      font-weight:1000;
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    /* ---- layout ---- */
-    .layout{
-      /* 🔴 修改：高度扣掉 safeTop，避免整體多出一截造成卡住/點不到 */
-      height:calc(100vh - var(--topbar-h) - var(--safeTop));
-      display:flex;
-      gap:10px;
-      padding:10px;
-      box-sizing:border-box;
-    }
-
-    .panel{
-      background:var(--panel-bg);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      overflow:hidden;
-      box-shadow:var(--shadow);
-      display:flex;
-      flex-direction:column;
-      min-width:0;
-    }
-
-    .sidebar{ width:var(--side-w); }
-    .toc{ width:var(--toc-w); }
-    .editorArea{ flex:1; }
-
-    .panelHead{
-      padding:10px 12px;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      background:#fff;
-    }
-    .panelHead .h{
-      font-weight:1000;
-      letter-spacing:.3px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    /* ---- post list ---- */
-    .filters{
-      display:flex;
-      gap:6px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .tab{
-      font-size:12px;
-      font-weight:1000;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:#fff;
-      cursor:pointer;
-      user-select:none;
-      color:var(--muted);
-    }
-    .tab.active{
-      color:var(--text);
-      border-color:#bfdbfe;
-      background:#eff6ff;
-    }
-
-    .postList{
-      list-style:none;
-      margin:0;
-      padding:8px;
-      overflow:auto;
-      flex:1;
-    }
-
-    .postItem{
-      padding:10px 10px;
-      border-radius:14px;
-      border:1px solid transparent;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .postItem:hover{ background:#f8fafc; }
-    .postItem.active{
-      border-color:#bfdbfe;
-      background:#eff6ff;
-    }
-    .postItem .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-    }
-    .postItem .t{
-      font-weight:1000;
-      font-size:13px;
-      line-height:1.35;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      flex:1;
-      min-width:0;
-    }
-    .postItem .meta{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:900;
-    }
-    .badge{
-      font-size:11px;
-      padding:4px 8px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      font-weight:1000;
-      white-space:nowrap;
-    }
-    .badge.draft{ background:#fff7ed; border-color:#fed7aa; color:#9a3412; }
-    .badge.pub{ background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
-
-    /* ---- editor ---- */
-    #editorWrap{
-      flex:1;
-      min-height:0;
-    }
-
-    /* typography for editor & preview */
-    .toastui-editor-md-container .ProseMirror,
-    .toastui-editor-ww-container .ProseMirror,
-    .toastui-editor-contents{
-      font-family: var(--content-font-family) !important;
-      font-size: var(--content-font-size) !important;
-      line-height: var(--content-line-height) !important;
-    }
-
-    /* ---- callout style (works in preview + reader + public) ---- */
-    .toastui-editor-contents .callout,
-    .callout{
-      border:1px solid var(--border);
-      border-left-width:6px;
-      border-radius:14px;
-      padding:12px 14px;
-      margin:14px 0;
-      background:#f8fafc;
-    }
-    .callout .calloutTitle{
-      font-weight:1000;
-      margin-bottom:6px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .callout.tip{ border-left-color:#10b981; background:#ecfdf5; }
-    .callout.note{ border-left-color:#2563eb; background:#eff6ff; }
-    .callout.warn{ border-left-color:#f59e0b; background:#fffbeb; }
-    .callout.quote{ border-left-color:#64748b; background:#f1f5f9; }
-
-    /* ---- toc ---- */
-    .tocList{
-      padding:8px 10px 14px;
-      overflow:auto;
-      flex:1;
-    }
-    .tocItem{
-      padding:8px 10px;
-      border-radius:14px;
-      cursor:pointer;
-      border:1px solid transparent;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      user-select:none;
-    }
-    .tocItem:hover{ background:#f8fafc; }
-    .tocItem.active{ background:#eff6ff; border-color:#bfdbfe; }
-    .tocLevel{
-      font-size:11px;
-      color:var(--muted);
-      font-weight:1000;
-      flex:0 0 auto;
-    }
-    .tocText{
-      font-weight:1000;
-      font-size:13px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      min-width:0;
-      flex:1;
-    }
-
-    /* ---- overlay / drawer ---- */
-    .mask{
-      position:fixed;
-      inset:0;
-      background:rgba(2,6,23,.55);
-      display:none;
-      z-index:60;
-      align-items:stretch;
-      justify-content:flex-end;
-    }
-    .drawer{
-      width:min(480px, 94vw);
-      background:#fff;
-      border-left:1px solid var(--border);
-      padding:14px;
-      box-sizing:border-box;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .drawer h3{
-      margin:0;
-      font-size:16px;
-      font-weight:1100;
-    }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .field label{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:1000;
-    }
-    .field input, .field textarea, .field select{
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:10px 12px;
-      outline:none;
-      font-size:14px;
-      font-family: var(--content-font-family);
-      font-weight:800;
-    }
-    .field textarea{ min-height:90px; resize:vertical; }
-
-    .drawerActions{
-      display:flex;
-      gap:8px;
-      justify-content:flex-end;
-      margin-top:auto;
-      padding-top:10px;
-      border-top:1px solid var(--border);
-    }
-
-    /* cover uploader */
-    .coverBox{
-      border:2px dashed #cbd5e1;
-      border-radius:16px;
-      padding:12px;
-      background:#f8fafc;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .coverBox.drag{
-      border-color: var(--primary);
-      background:#eff6ff;
-    }
-    .coverPreview{
-      width:100%;
-      border-radius:14px;
-      border:1px solid var(--border);
-      overflow:hidden;
-      background:#fff;
-    }
-    .coverPreview img{
-      width:100%;
-      display:block;
-    }
-    .coverHint{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:900;
-      line-height:1.5;
-    }
-
-    /* full overlay */
-    .overlayMask{
-      position:fixed;
-      inset:0;
-      background:rgba(2,6,23,.70);
-      display:none;
-      z-index:70;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      box-sizing:border-box;
-    }
-    .overlayPanel{
-      width:min(980px, 100%);
-      height:min(92vh, 860px);
-      background:#ffffff;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.2);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
-    .overlayHead{
-      padding:10px 12px;
-      border-bottom:1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background:#fff;
-    }
-    .overlayHead .h{
-      font-weight:1100;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .overlayBody{
-      padding:14px;
-      overflow:auto;
-      flex:1;
-      box-sizing:border-box;
-    }
-
-    /* reader */
-    .readerCover{
-      border:1px solid var(--border);
-      border-radius:16px;
-      overflow:hidden;
-      margin-bottom:14px;
-      background:#f8fafc;
-    }
-    .readerCover img{ width:100%; display:block; }
-    .readerTitle{
-      margin:0 0 8px 0;
-      font-size:28px;
-      line-height:1.2;
-      font-weight:1100;
-    }
-    .readerMeta{
-      color:var(--muted);
-      font-weight:900;
-      font-size:13px;
-      margin-bottom:12px;
-      line-height:1.5;
-    }
-    .readerContent{
-      font-family: var(--content-font-family);
-      font-size: var(--content-font-size);
-      line-height: var(--content-line-height);
-    }
-    .readerContent img{ max-width:100%; border-radius:12px; }
-    .readerContent pre{ overflow:auto; padding:12px; border-radius:12px; background:#0b1220; color:#e5e7eb; }
-
-    /* share generator */
-    .shareGrid{
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:14px;
-      align-items:start;
-    }
-    @media (max-width: 980px){
-      .layout{ flex-direction:column; height:auto; }
-      .sidebar, .toc{ width:auto; }
-      .shareGrid{ grid-template-columns: 1fr; }
-    }
-    .sharePreview{
-      border:1px solid var(--border);
-      border-radius:16px;
-      overflow:hidden;
-      background:#0b1220;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      min-height:240px;
-    }
-    .sharePreview img{ width:100%; display:block; }
-    .shareBtns{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-    .smallHint{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:900;
-      line-height:1.5;
-    }
-
-    /* versions list */
-    .verList{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .verItem{
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:10px 12px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-    }
-    .verItem .left{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      min-width:0;
-    }
-    .verItem .t{
-      font-weight:1100;
-      font-size:13px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      max-width: 560px;
-    }
-    .verItem .m{
-      font-size:12px;
-      color:var(--muted);
-      font-weight:900;
-    }
-    .verItem .right{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    /* ---- PUBLIC PAGE (純前端路由) ---- */
-    #appPublic{
-      display:none;
-      /* 🔴 修改：避免 body padding-top 造成 public 多出一截 */
-      min-height:calc(100vh - var(--safeTop));
-    }
-    .publicTop{
-      height:56px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:0 12px;
-      border-bottom:1px solid var(--border);
-      background:rgba(255,255,255,.88);
-      backdrop-filter: blur(10px);
-      position:sticky;
-
-      /* 🔴 修改：從 top:0 改成安全距離 */
-      top:var(--safeTop);
-
-      z-index:35;
-      box-sizing:border-box;
-    }
-    .publicTop .left, .publicTop .right{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .publicWrap{
-      max-width: 920px;
-      margin: 18px auto 64px;
-      padding: 0 14px;
-      box-sizing:border-box;
-    }
-    .publicCard{
-      background:var(--panel-bg);
-      border:1px solid var(--border);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .publicCover{
-      width:100%;
-      background:#f8fafc;
-      border-bottom:1px solid var(--border);
-    }
-    .publicCover img{
-      width:100%;
-      display:block;
-      max-height: 420px;
-      object-fit: cover;
-      object-position: center;
-    }
-    .publicBody{
-      padding:16px 18px 18px;
-    }
-    .publicTitle{
-      margin:0 0 10px;
-      font-size:32px;
-      line-height:1.18;
-      font-weight:1100;
-      letter-spacing:.2px;
-    }
-    .publicMeta{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      align-items:center;
-      margin-bottom: 14px;
-      color:var(--muted);
-      font-weight:900;
-      font-size:13px;
-      line-height:1.5;
-    }
-    .publicDesc{
-      margin: 0 0 14px;
-      font-weight:900;
-      color:var(--text);
-      opacity:.92;
-      line-height:1.7;
-    }
-    #publicViewer{
-      padding-top: 6px;
-    }
-    .publicNotice{
-      padding:16px 18px;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background:#fff7ed;
-      border-color:#fed7aa;
-      color:#9a3412;
-      font-weight:1000;
-      line-height:1.6;
-    }
-
-    /* dark mode shell */
-    body.app-dark{
-      --app-bg:#0b1220;
-      --panel-bg:#0f172a;
-      --text:#e5e7eb;
-      --muted:#94a3b8;
-      --border:#1f2a44;
-      background:var(--app-bg);
-      color:var(--text);
-    }
-    body.app-dark .topbar{ background:rgba(15,23,42,.78); }
-    body.app-dark .btn,
-    body.app-dark .select,
-    body.app-dark .title-input,
-    body.app-dark .fontSizeBox{
-      background:#0f172a;
-      border-color:#1f2a44;
-      color:var(--text);
-    }
-    body.app-dark .pill.gray{ background:#111c33; border-color:#1f2a44; color:#e5e7eb; }
-    body.app-dark .panelHead{ background:#0f172a; }
-    body.app-dark .postItem:hover{ background:#111c33; }
-    body.app-dark .postItem.active{ background:#0b2a55; border-color:#1d4ed8; }
-    body.app-dark .tocItem:hover{ background:#111c33; }
-    body.app-dark .tocItem.active{ background:#0b2a55; border-color:#1d4ed8; }
-    body.app-dark .drawer{ background:#0b1220; color:#e5e7eb; border-color:#1f2a44; }
-    body.app-dark .drawerActions{ border-color:#1f2a44; }
-    body.app-dark .field input, body.app-dark .field textarea, body.app-dark .field select{
-      background:#0f172a; color:#e5e7eb; border-color:#1f2a44;
-    }
-    body.app-dark .coverBox{ background:#0f172a; border-color:#334155; }
-    body.app-dark .coverBox.drag{ border-color:#60a5fa; background:#0b2a55; }
-    body.app-dark .overlayPanel{ background:#0b1220; color:#e5e7eb; border-color:#1f2a44; }
-    body.app-dark .overlayHead{ background:#0f172a; border-color:#1f2a44; }
-    body.app-dark .overlayBody{ background:#0b1220; }
-    body.app-dark .verItem{ border-color:#1f2a44; }
-
-    body.app-dark .publicTop{ background:rgba(15,23,42,.78); }
-    body.app-dark .publicCover{ background:#0b1220; }
-    body.app-dark .publicNotice{ background:#2a1606; border-color:#7c2d12; color:#fdba74; }
-  </style>
-</head>
-
-<body>
-  <!-- =========================
-       EDITOR APP (default)
-       ========================= -->
-  <div id="appEditor">
-    <header class="topbar">
-      <div class="left">
-        <button class="btn primary" id="btnNew">＋ 新文章</button>
-        <button class="btn danger" id="btnDelete">刪除</button>
-
-        <button class="btn" id="btnToggleStatus" title="切換草稿 / 發佈">
-          <span id="statusText">草稿</span>
-        </button>
-
-        <!-- ✅ 新增：公開頁 / 複製公開連結 -->
-        <button class="btn soft" id="btnOpenPublic" title="已發佈文章才會顯示內容">公開頁</button>
-        <button class="btn" id="btnCopyPublic" title="複製公開頁連結">複製連結</button>
-
-        <input class="title-input" id="titleInput" placeholder="輸入文章標題…" />
-        <span class="pill" id="saveState">已儲存</span>
+<!-- ===== 匯出視窗 ===== -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('exportModal')">×</button>
+    <div class="modal-title">📤 批次匯出到 Buffer</div>
+    <p class="modal-p">Buffer 沒有內建 30 篇一次貼上的欄位，所以這裡準備兩種送進去的方式，看妳那邊 Buffer 方案支援哪種：</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:6px;">① 逐篇貼上（最穩定）</div>
+        <div style="font-size:12px;color:var(--ink-2);margin-bottom:10px;line-height:1.7;">左側清單每篇都有「複製」按鈕，按一下複製、切到 Buffer 貼上、排時間，再回來按下一篇。中間可以隨時關掉分頁，進度會留著。</div>
+        <button class="btn primary" style="width:100%;justify-content:center;" onclick="closeModal('exportModal');showToast('回到左側清單，按每篇的📋即可');">知道了，我用這個</button>
       </div>
-
-      <div class="right">
-        <select class="select" id="fontSelect" title="字體（免付費已授權字體）">
-          <option value='"Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif'>Noto Sans TC（穩）</option>
-          <option value='"Noto Serif TC", serif'>Noto Serif TC（文章感）</option>
-          <option value='"Zen Maru Gothic", "Noto Sans JP", sans-serif'>Zen Maru Gothic（圓潤）</option>
-          <option value='"M PLUS Rounded 1c", "Noto Sans TC", sans-serif'>M PLUS Rounded 1c（可愛）</option>
-          <option value='"Noto Sans JP", sans-serif'>Noto Sans JP（日文字）</option>
-          <option value='"Inter", system-ui, sans-serif'>Inter（英數漂亮）</option>
-        </select>
-
-        <div class="fontSizeBox" title="字級">
-          <button class="btn" style="padding:6px 8px;border-radius:12px;" id="btnSmaller">A-</button>
-          <span class="n" id="fontSizeLabel">16</span>
-          <button class="btn" style="padding:6px 8px;border-radius:12px;" id="btnBigger">A+</button>
-        </div>
-
-        <button class="btn" id="btnMode" title="切換 Markdown / WYSIWYG">Markdown</button>
-        <button class="btn" id="btnTheme" title="切換深淺色">🌙 深色</button>
-
-        <!-- 你要求：上方列保留 -->
-        <button class="btn soft" id="btnReading" title="打開閱讀模式並更新內容">更新閱讀模式</button>
-
-        <button class="btn" id="btnSettings" title="文章設定（含封面上傳）">文章設定</button>
-        <button class="btn" id="btnShare" title="產生社群分享圖">分享圖</button>
-        <button class="btn" id="btnVersions" title="版本紀錄 / 復原">版本</button>
-        <button class="btn" id="btnCmds" title="Slash 指令清單">指令 /</button>
-
-        <button class="btn" id="btnExportJson" title="匯出所有資料 JSON">匯出JSON</button>
-        <button class="btn" id="btnImportJson" title="匯入 JSON">匯入JSON</button>
+      <div style="border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:6px;">② Buffer 官方「Bulk Upload」一次匯入</div>
+        <div style="font-size:12px;color:var(--ink-2);margin-bottom:10px;line-height:1.7;">Buffer 有內建批次上傳功能：<b>Publish → 選頻道 → 右上角⚙️設定 → General → Bulk Upload</b>，免費版一次最多10篇、付費版最多100篇。下載下面的 .csv，直接拖進去上傳即可，欄位已完全對齊 Buffer 官方範本（<code>Text / Image URL / Tags / Posting Time</code> 四欄、每欄都加雙引號）。<br><b>發 IG 一定要有圖片網址</b>：先在每篇下方「🖼️ IG 圖卡」下載4張JPG（或按頂部一次打包30天、120張），挑一張上傳到 Imgur／Google Drive 公開空間，把連結貼回每篇的圖片網址欄，CSV 才會自動帶上 Image URL 欄位。Tags／Posting Time 欄位會留空給妳自己在 Buffer 裡填，因為 Tags 必須是妳頻道已存在的標籤、Posting Time 則建議直接用 Buffer 排程比較準。</div>
+        <button class="btn gold" style="width:100%;justify-content:center;" onclick="downloadCsv()">⬇️ 下載 Buffer 專用 .csv</button>
       </div>
-    </header>
-
-    <main class="layout">
-      <aside class="panel sidebar">
-        <div class="panelHead">
-          <div class="h">文章清單 <span class="pill gray" id="postCount">0 篇</span></div>
-          <div class="filters">
-            <span class="tab active" data-filter="all">全部</span>
-            <span class="tab" data-filter="draft">草稿</span>
-            <span class="tab" data-filter="published">已發佈</span>
-          </div>
-        </div>
-        <ul class="postList" id="postList"></ul>
-      </aside>
-
-      <section class="panel editorArea">
-        <div id="editorWrap"></div>
-      </section>
-
-      <aside class="panel toc">
-        <div class="panelHead">
-          <div class="h">目錄 <span class="pill gray">可點回編輯區</span></div>
-          <span class="pill gray" title="常用：/h2 /h3 /quote /callout /todo">/ 指令</span>
-        </div>
-        <div class="tocList" id="tocList"></div>
-      </aside>
-    </main>
-  </div>
-
-  <!-- =========================
-       PUBLIC PAGE (route: #/p/<key>)
-       ========================= -->
-  <div id="appPublic">
-    <div class="publicTop">
-      <div class="left">
-        <button class="btn" id="btnBackToEdit">← 回編輯</button>
-        <span class="pill gray" id="publicBadge">公開頁</span>
-      </div>
-      <div class="right">
-        <button class="btn" id="btnCopyPublicTop">複製連結</button>
-        <button class="btn primary" id="btnOpenNewTab">開新分頁</button>
+      <div style="border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:6px;">③ 逐篇複製版（.txt）</div>
+        <div style="font-size:12px;color:var(--ink-2);margin-bottom:10px;line-height:1.7;">每篇之間清楚標出 Day 幾，開啟檔案就能一篇一篇選取、複製、貼到 Buffer 的貼文框，不想用 CSV 匯入的話這個最直覺。</div>
+        <button class="btn ghost" style="width:100%;justify-content:center;" onclick="downloadCopyPaste()">⬇️ 下載逐篇複製版 .txt</button>
       </div>
     </div>
-
-    <div class="publicWrap">
-      <div class="publicCard">
-        <div class="publicCover" id="publicCover" style="display:none;"></div>
-        <div class="publicBody">
-          <h1 class="publicTitle" id="publicTitle"></h1>
-          <div class="publicMeta" id="publicMeta"></div>
-          <p class="publicDesc" id="publicDesc" style="display:none;"></p>
-
-          <!-- ToastUI Viewer container -->
-          <div id="publicViewer"></div>
-
-          <div id="publicNotice" style="display:none;margin-top:14px;"></div>
-        </div>
-      </div>
+    <div class="toggle-row" style="margin-bottom:10px;">
+      <input type="checkbox" id="exportIncludeSig" checked style="width:15px;height:15px;">
+      <label for="exportIncludeSig" style="cursor:pointer;">匯出時自動附上簽名檔＋Hashtag（若該篇還沒手動插入過）</label>
     </div>
+    <button class="btn accent" style="width:100%;justify-content:center;padding:11px;" onclick="copyAllDivided()">📋 一次複製全部 30 篇（用分隔線隔開，貼到記事本備用）</button>
   </div>
-
-  <!-- 文章設定 Drawer -->
-  <div class="mask" id="drawerMask">
-    <div class="drawer" role="dialog" aria-modal="true">
-      <h3>文章設定（含封面）</h3>
-
-      <div class="field">
-        <label>Slug（網址尾巴，例如：my-first-post）</label>
-        <input id="settingSlug" placeholder="my-first-post" />
-      </div>
-
-      <div class="field">
-        <label>標籤（用逗號分隔）</label>
-        <input id="settingTags" placeholder="日語, N3, 口說" />
-      </div>
-
-      <div class="field">
-        <label>摘要（用於列表、SEO、分享圖）</label>
-        <textarea id="settingDesc" placeholder="這篇文章重點是什麼？用 1～2 句話描述"></textarea>
-      </div>
-
-      <div class="field">
-        <label>封面圖（可拖曳 / 上傳 / 貼上）</label>
-        <div class="coverBox" id="coverBox" tabindex="0">
-          <div class="coverPreview" id="coverPreview" style="display:none;"></div>
-          <div class="coverHint" id="coverHint">
-            ✅ 直接把圖片拖進來，或點這裡選檔案，或 Ctrl+V 貼上圖片。<br>
-            ✅ 系統會自動壓縮（建議封面不用超大，會更省空間）。
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn" id="btnPickCover" type="button">選擇圖片</button>
-            <button class="btn danger" id="btnRemoveCover" type="button">移除封面</button>
-          </div>
-          <input type="file" id="coverInput" accept="image/*" style="display:none;">
-        </div>
-      </div>
-
-      <div class="drawerActions">
-        <button class="btn" id="btnCloseDrawer">關閉</button>
-        <button class="btn primary" id="btnSaveSettings">儲存設定</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Overlay: 閱讀模式 -->
-  <div class="overlayMask" id="readerMask">
-    <div class="overlayPanel">
-      <div class="overlayHead">
-        <div class="h">閱讀模式 <span class="pill gray" id="readerStatus">已更新</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn" id="btnCloseReader">關閉</button>
-          <button class="btn primary" id="btnRefreshReader">更新</button>
-        </div>
-      </div>
-      <div class="overlayBody">
-        <div class="readerCover" id="readerCover" style="display:none;"></div>
-        <h1 class="readerTitle" id="readerTitle"></h1>
-        <div class="readerMeta" id="readerMeta"></div>
-        <div class="readerContent" id="readerContent"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Overlay: 分享圖 -->
-  <div class="overlayMask" id="shareMask">
-    <div class="overlayPanel">
-      <div class="overlayHead">
-        <div class="h">社群分享圖產生器 <span class="pill gray">一鍵輸出</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn" id="btnCloseShare">關閉</button>
-          <button class="btn primary" id="btnBuildShare">重新產生</button>
-        </div>
-      </div>
-
-      <div class="overlayBody">
-        <div class="shareGrid">
-          <div>
-            <div class="sharePreview">
-              <img id="shareImg" alt="share preview" style="display:none;">
-              <div id="shareEmpty" style="color:#94a3b8;font-weight:1000;padding:18px;text-align:center;">
-                點「重新產生」就會出現預覽圖 ✨
-              </div>
-            </div>
-
-            <div class="shareBtns">
-              <button class="btn" data-size="1200x630" id="btnDl1">下載 1200×630</button>
-              <button class="btn" data-size="1080x1080" id="btnDl2">下載 1080×1080</button>
-              <button class="btn" data-size="1080x1350" id="btnDl3">下載 1080×1350</button>
-            </div>
-
-            <div class="smallHint" style="margin-top:8px;">
-              ✅ 會自動帶入：封面（若有）、標題、摘要、標籤、品牌文字。<br>
-              ✅ 下載為 PNG；若封面太大也沒關係，會自動裁切置中。
-            </div>
-          </div>
-
-          <div>
-            <div class="field">
-              <label>版型風格</label>
-              <select id="shareTheme">
-                <option value="light">清爽白底</option>
-                <option value="dark">沉穩暗底</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label>品牌文字（固定放右下）</label>
-              <input id="shareBrand" value="小狸日語" />
-            </div>
-
-            <div class="field">
-              <label>主色（可不改）</label>
-              <input id="shareColor" value="#2563eb" />
-            </div>
-
-            <div class="field">
-              <label>是否使用封面作為背景</label>
-              <select id="shareUseCover">
-                <option value="yes">是（更像部落格分享）</option>
-                <option value="no">否（乾淨色塊）</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label>字體（分享圖用）</label>
-              <select id="shareFont">
-                <option value="Noto Sans TC">Noto Sans TC</option>
-                <option value="Noto Serif TC">Noto Serif TC</option>
-                <option value="Zen Maru Gothic">Zen Maru Gothic</option>
-                <option value="Inter">Inter</option>
-              </select>
-            </div>
-
-            <div class="smallHint">
-              小技巧：分享圖的字不要太多，摘要抓 1～2 句最好看。
-            </div>
-          </div>
-        </div>
-
-        <canvas id="shareCanvas" style="display:none;"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- Overlay: 版本 -->
-  <div class="overlayMask" id="verMask">
-    <div class="overlayPanel">
-      <div class="overlayHead">
-        <div class="h">版本紀錄 <span class="pill gray">可復原</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn" id="btnCloseVer">關閉</button>
-          <button class="btn" id="btnSaveVer">手動建立版本</button>
-          <button class="btn primary" id="btnRollback10">復原到 10 分鐘前</button>
-        </div>
-      </div>
-      <div class="overlayBody">
-        <div class="smallHint" style="margin-bottom:10px;">
-          ✅ 系統會自動每 10 分鐘（有變更才會）存一個版本；最多保留 30 份。<br>
-          ✅ 你也可以按「手動建立版本」做一個 checkpoint。
-        </div>
-        <div class="verList" id="verList"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Overlay: 指令 -->
-  <div class="overlayMask" id="cmdMask">
-    <div class="overlayPanel">
-      <div class="overlayHead">
-        <div class="h">Slash 指令清單 <span class="pill gray">在行首輸入 + 空白/Enter</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn" id="btnCloseCmd">關閉</button>
-          <button class="btn primary" id="btnInsertHelp">把 /help 插到游標處</button>
-        </div>
-      </div>
-      <div class="overlayBody" style="line-height:1.8;">
-        <div style="font-weight:1100;margin-bottom:10px;">可用指令（行首輸入例如：<code>/h2</code> 然後按空白）</div>
-        <ul style="margin:0;padding-left:18px;font-weight:900;color:var(--text);">
-          <li><code>/h1</code> ~ <code>/h6</code>：標題層級</li>
-          <li><code>/quote</code>：引用（<code>&gt; </code>）</li>
-          <li><code>/callout</code>：插入提示框（預設 note）</li>
-          <li><code>/tip</code>：插入 TIP 提示框</li>
-          <li><code>/warn</code>：插入 WARN 警告框</li>
-          <li><code>/note</code>：插入 NOTE 筆記框</li>
-          <li><code>/hr</code>：分隔線（<code>---</code>）</li>
-          <li><code>/todo</code>：待辦（<code>- [ ] </code>）</li>
-          <li><code>/help</code>：插入小抄（命令清單）</li>
-        </ul>
-        <div class="smallHint" style="margin-top:12px;">
-          小提醒：指令會盡量同時支援 Markdown / WYSIWYG（若你在 WYSIWYG，系統會自動幫你轉到 Markdown 做轉換，再切回去）。
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Import file input -->
-  <input type="file" id="jsonInput" accept="application/json" style="display:none;" />
-
-  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
-
-  <script>
-    // =============================
-    // Storage model
-    // =============================
-    const LS_KEY = "vocus_like_editor_pro_public_v1";
-
-    const state = loadState();
-    let editor = null;
-    let autosaveTimer = null;
-    let tocTimer = null;
-    let currentFilter = "all"; // all|draft|published
-    let isBooting = true;
-
-    // public viewer instance
-    let publicViewer = null;
-
-    boot();
-
-    function boot(){
-      ensureAtLeastOnePost();
-      applyUiVars();
-      mountEditor(state.ui.theme);
-      bindUI();
-      renderPostList();
-      loadPostToEditor(state.currentId);
-      updateToc();
-      refreshSaveState("已儲存");
-      isBooting = false;
-
-      // router
-      window.addEventListener("hashchange", handleRoute);
-      handleRoute(); // initial
-    }
-
-    // =============================
-    // ROUTER
-    //   #/edit (default) -> editor
-    //   #/p/<key> -> public page
-    // key = slug if set, else id
-    // =============================
-    function handleRoute(){
-      const h = location.hash || "";
-      if(h.startsWith("#/p/")){
-        const key = decodeURIComponent(h.slice(4));
-        showPublicRoute(key);
-      }else{
-        showEditorRoute();
-      }
-    }
-
-    function showEditorRoute(){
-      document.getElementById("appPublic").style.display = "none";
-      document.getElementById("appEditor").style.display = "block";
-    }
-
-    function showPublicRoute(key){
-      document.getElementById("appEditor").style.display = "none";
-      document.getElementById("appPublic").style.display = "block";
-
-      const found = findPostByPublicKey(key);
-      if(!found){
-        renderPublicNotFound("找不到這篇文章（可能已被刪除或連結錯誤）。");
-        return;
-      }
-      const { id, post } = found;
-
-      // only published can be viewed
-      if((post.status || "draft") !== "published"){
-        renderPublicNotFound("這篇文章目前還是草稿，尚未公開。");
-        return;
-      }
-
-      // Render
-      renderPublicPost(id, post);
-    }
-
-    function renderPublicNotFound(msg){
-      document.getElementById("publicTitle").textContent = "無法顯示";
-      document.getElementById("publicMeta").textContent = "";
-      document.getElementById("publicDesc").style.display = "none";
-      document.getElementById("publicCover").style.display = "none";
-      document.getElementById("publicViewer").innerHTML = "";
-
-      const n = document.getElementById("publicNotice");
-      n.style.display = "block";
-      n.className = "publicNotice";
-      n.textContent = msg;
-    }
-
-    function renderPublicPost(id, post){
-      // cover
-      const cover = document.getElementById("publicCover");
-      if(post.coverDataUrl){
-        cover.style.display = "block";
-        cover.innerHTML = `<img src="${post.coverDataUrl}" alt="cover">`;
-      }else{
-        cover.style.display = "none";
-        cover.innerHTML = "";
-      }
-
-      // title
-      document.getElementById("publicTitle").textContent = post.title || "（未命名）";
-
-      // desc
-      const desc = (post.settings?.desc || "").trim();
-      const descEl = document.getElementById("publicDesc");
-      if(desc){
-        descEl.style.display = "block";
-        descEl.textContent = desc;
-      }else{
-        descEl.style.display = "none";
-        descEl.textContent = "";
-      }
-
-      // meta
-      const tags = (post.settings?.tags || "").trim();
-      const slug = (post.settings?.slug || "").trim();
-      const updated = new Date(post.updatedAt || Date.now()).toLocaleString();
-      const metaParts = [
-        `狀態：已發佈`,
-        slug ? `Slug：${slug}` : `ID：${id}`,
-        tags ? `Tags：${tags}` : "",
-        `更新：${updated}`
-      ].filter(Boolean);
-      document.getElementById("publicMeta").textContent = metaParts.join(" ｜ ");
-
-      // notice off
-      const n = document.getElementById("publicNotice");
-      n.style.display = "none";
-      n.textContent = "";
-
-      // viewer
-      const viewerEl = document.getElementById("publicViewer");
-      viewerEl.innerHTML = "";
-
-      // ToastUI Viewer factory
-      try{
-        publicViewer = toastui.Editor.factory({
-          el: viewerEl,
-          viewer: true,
-          initialValue: post.markdown || ""
-        });
-      }catch(e){
-        // fallback: use current editor to render HTML if viewer fails
-        if(editor){
-          const curMd = editor.getMarkdown();
-          editor.setMarkdown(post.markdown || "", false);
-          viewerEl.innerHTML = editor.getHTML();
-          editor.setMarkdown(curMd, false);
-          editor.changeMode(state.ui.mode, true);
-        }else{
-          viewerEl.textContent = post.markdown || "";
-        }
-      }
-
-      // badge + buttons copy/open
-      const key = getPublicKey(id, post);
-      document.getElementById("publicBadge").textContent = `公開頁：${key}`;
-      const url = getPublicUrl(key);
-      document.getElementById("btnOpenNewTab").onclick = () => window.open(url, "_blank");
-      document.getElementById("btnCopyPublicTop").onclick = () => copyText(url, "已複製公開連結");
-    }
-
-    function getPublicKey(id, post){
-      const slug = (post.settings?.slug || "").trim();
-      return slug || id;
-    }
-
-    function findPostByPublicKey(key){
-      const posts = state.posts || {};
-      for(const [id, p] of Object.entries(posts)){
-        const slug = (p.settings?.slug || "").trim();
-        if(slug && slug === key) return { id, post:p };
-        if(id === key) return { id, post:p };
-      }
-      return null;
-    }
-
-    function getPublicUrl(key){
-      const base = location.href.split("#")[0];
-      return base + "#/p/" + encodeURIComponent(key);
-    }
-
-    function goPublicOfCurrent(){
-      const p = state.posts[state.currentId];
-      if(!p) return;
-      if((p.status || "draft") !== "published"){
-        alert("這篇文章還是草稿。先切換成「已發佈」才會公開喔！");
-        return;
-      }
-      const key = getPublicKey(state.currentId, p);
-      location.hash = "#/p/" + encodeURIComponent(key);
-    }
-
-    function copyPublicOfCurrent(){
-      const p = state.posts[state.currentId];
-      if(!p) return;
-      const key = getPublicKey(state.currentId, p);
-      const url = getPublicUrl(key);
-      copyText(url, "已複製公開連結");
-    }
-
-    async function copyText(text, toastMsg){
-      try{
-        await navigator.clipboard.writeText(text);
-        refreshSaveState(toastMsg || "已複製");
-        setTimeout(()=>refreshSaveState("已儲存"), 900);
-      }catch(e){
-        // fallback
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        ta.remove();
-        refreshSaveState(toastMsg || "已複製");
-        setTimeout(()=>refreshSaveState("已儲存"), 900);
-      }
-    }
-
-    // =============================
-    // State load/save
-    // =============================
-    function loadState(){
-      try{
-        const raw = localStorage.getItem(LS_KEY);
-        if(!raw) return defaultState();
-        const s = JSON.parse(raw);
-
-        s.posts = s.posts || {};
-        s.ui = s.ui || {};
-        s.ui.theme = s.ui.theme || "light";
-        s.ui.fontFamily = s.ui.fontFamily || '"Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif';
-        s.ui.fontSize = Number(s.ui.fontSize || 16);
-        s.ui.mode = s.ui.mode || "markdown";
-        s.currentId = s.currentId || "";
-        return s;
-      }catch{
-        return defaultState();
-      }
-    }
-
-    function defaultState(){
-      return {
-        version: 1,
-        currentId: "",
-        posts: {},
-        ui: {
-          theme: "light",
-          fontFamily: '"Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif',
-          fontSize: 16,
-          mode: "markdown"
-        }
-      };
-    }
-
-    function saveState(){
-      localStorage.setItem(LS_KEY, JSON.stringify(state));
-    }
-
-    function newId(){
-      return "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-    }
-
-    function ensureAtLeastOnePost(){
-      const ids = Object.keys(state.posts);
-      if(ids.length === 0){
-        const id = newId();
-        state.posts[id] = {
-          title: "範例文章：開始寫吧",
-          status: "draft", // draft|published
-          markdown:
-`# 這是一篇範例
-
-把文章切到「已發佈」後，你就可以用公開頁連結：
-
-- 點上方「公開頁」或「複製連結」
-- 連結格式：#/p/slug 或 #/p/id
-
-## 試試看
-先到「文章設定」填 slug，再把狀態切成已發佈。
-
-<div class="callout note">
-  <div class="calloutTitle">📝 NOTE</div>
-  這是一個 callout 範例。你也可以用 /callout 快速插入。
 </div>
-`,
-          settings: { slug:"", tags:"", desc:"" },
-          coverDataUrl: "",
-          updatedAt: Date.now(),
-          versions: [],
-          lastAutoVerAt: 0,
-          lastAutoHash: ""
-        };
-        state.currentId = id;
-        saveState();
-      }else if(!state.currentId || !state.posts[state.currentId]){
-        state.currentId = ids.sort((a,b)=>(state.posts[b].updatedAt||0)-(state.posts[a].updatedAt||0))[0];
-        saveState();
-      }
-    }
 
-    // =============================
-    // UI vars
-    // =============================
-    function applyUiVars(){
-      document.documentElement.style.setProperty("--content-font-family", state.ui.fontFamily);
-      document.documentElement.style.setProperty("--content-font-size", state.ui.fontSize + "px");
-      document.getElementById("fontSelect").value = state.ui.fontFamily;
-      document.getElementById("fontSizeLabel").textContent = String(state.ui.fontSize);
+<!-- ===== AI Prompt 視窗 ===== -->
+<div class="modal-overlay" id="promptModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('promptModal')">×</button>
+    <div class="modal-title">🤖 批次生成 Prompt（含妳的語氣範本）</div>
+    <p class="modal-p">先在左側清單把 30 天的「主題」填一填（可以空著讓 AI 自由發揮），複製下方 Prompt 貼給 AI（Gemini／ChatGPT／Claude 都可以），把回傳的 JSON 貼回下面「貼上 AI 生成內容」就會自動分配到 30 天。</p>
+    <textarea class="modal-ta" id="promptOutput" readonly></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn primary" style="flex:1;justify-content:center;" onclick="copyPrompt()">📋 複製 Prompt</button>
+      <button class="btn ghost" style="flex:1;justify-content:center;" onclick="closeModal('promptModal');openModal('importModal');">下一步：貼上 AI 內容 →</button>
+    </div>
+  </div>
+</div>
 
-      if(state.ui.theme === "dark") document.body.classList.add("app-dark");
-      else document.body.classList.remove("app-dark");
+<!-- ===== 匯入視窗 ===== -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('importModal')">×</button>
+    <div class="modal-title">📥 貼上 AI 生成內容</div>
+    <p class="modal-p">貼上 AI 回傳的 JSON（<span class="mono">[{day, topic, content}, ...]</span>），會自動依 day 分配進 30 天清單，原本已經寫的內容才不會被亂蓋掉。</p>
+    <textarea class="modal-ta" id="importArea" placeholder="貼上 AI 回傳的 JSON..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn primary" style="flex:1;justify-content:center;" onclick="doImport()">✅ 匯入</button>
+      <button class="btn ghost" style="flex:1;justify-content:center;" onclick="closeModal('importModal')">取消</button>
+    </div>
+  </div>
+</div>
 
-      document.getElementById("btnTheme").textContent = (state.ui.theme === "dark") ? "☀️ 淺色" : "🌙 深色";
-    }
+<!-- ===== 舊文回收視窗 ===== -->
+<div class="modal-overlay" id="recycleModal">
+  <div class="modal-box" style="max-width:640px;">
+    <button class="modal-close" onclick="closeModal('recycleModal')">×</button>
+    <div class="modal-title">♻️ 貼上舊文回收</div>
+    <p class="modal-p">把以前發過的舊文貼在下面，每篇之間用一行只有 <span class="mono">---</span> 的分隔線隔開。每篇第一行如果是 <span class="mono">圖:網址</span>（例：<span class="mono">圖:https://example.com/photo.jpg</span>），會自動抓成該篇的圖片網址，其餘部分當作內文。<br><b>解析後只會先放進下面的「回收區」暫存，不會自動填入任何一天，妳可以自己挑要指派到第幾天，絕對不會被覆蓋掉現有內容。</b></p>
+    <textarea class="modal-ta" id="recycleArea" placeholder="圖:https://example.com/photo1.jpg&#10;第一篇的內容……&#10;---&#10;第二篇的內容（沒有圖也可以）……&#10;---&#10;第三篇……"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="btn primary" style="flex:1;justify-content:center;" onclick="parseIntoRecyclePool()">✅ 解析加入回收區</button>
+      <button class="btn ghost" style="flex:1;justify-content:center;" onclick="closeModal('recycleModal')">關閉</button>
+    </div>
+    <div style="margin-top:16px;padding-top:14px;border-top:1.5px dashed var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:800;color:var(--ink);">📦 回收區暫存（<span id="recycleCount">0</span> 篇）</div>
+        <button class="btn ghost" style="font-size:11.5px;padding:5px 10px;" onclick="clearRecyclePool()">🗑 清空回收區</button>
+      </div>
+      <div id="recyclePoolList" style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
 
-    // =============================
-    // Editor mount
-    // =============================
-    function mountEditor(theme){
-      const wrap = document.getElementById("editorWrap");
-      wrap.innerHTML = "";
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="mark">🦝</span>
+      <div>
+        <h1>三十日貼文工坊</h1>
+        <div class="sub">小狸日語・Buffer 批次排程準備室</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn gold" onclick="openPromptModal()">🤖 批次生成 Prompt</button>
+      <button class="btn ghost" onclick="openModal('importModal')">📥 貼上 AI 內容</button>
+      <button class="btn ghost" onclick="openRecycleModal()">♻️ 貼上舊文回收</button>
+      <button class="btn ghost" onclick="toggleSettings()">⚙️ 簽名檔／Hashtag</button>
+      <button class="btn ghost" onclick="bulkDownloadImages()" id="bulkImgBtn">🖼️ 全部圖卡（打包.zip）</button>
+      <button class="btn accent" onclick="openModal('exportModal')">📤 匯出到 Buffer</button>
+      <button class="btn" onclick="exportBackup()">💾 備份</button>
+    </div>
+  </div>
+  <div class="settings-body" id="settingsBody">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="set-field">
+        <label>著作簽名檔</label>
+        <textarea id="sigInput"></textarea>
+      </div>
+      <div class="set-field">
+        <label>常用 Hashtag</label>
+        <textarea id="tagInput"></textarea>
+      </div>
+    </div>
+    <div style="border-top:1px dashed var(--border-2);padding-top:14px;">
+      <div style="font-size:11.5px;font-weight:900;color:var(--ink-3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;">🔧 WordPress 官網連線設定</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+        <div class="set-field">
+          <label>網站網址</label>
+          <input id="wpSiteInput" placeholder="https://japanese.hikky.com.tw" style="width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--paper-2);padding:9px 11px;font-size:12.5px;font-family:inherit;color:var(--ink);outline:none;">
+        </div>
+        <div class="set-field">
+          <label>使用者名稱</label>
+          <input id="wpUserInput" style="width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--paper-2);padding:9px 11px;font-size:12.5px;font-family:inherit;color:var(--ink);outline:none;">
+        </div>
+        <div class="set-field">
+          <label>應用程式密碼</label>
+          <input id="wpPassInput" type="password" style="width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--paper-2);padding:9px 11px;font-size:12.5px;font-family:inherit;color:var(--ink);outline:none;">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--ink-3);margin-top:6px;line-height:1.6;">僅儲存在你此台電腦的瀏覽器（localStorage），不會上傳或分享。密碼請用 WordPress 的「應用程式密碼」而非登入密碼。</div>
+    </div>
+  </div>
+</div>
 
-      const post = state.posts[state.currentId];
-      const initialValue = post ? post.markdown : "";
+<div class="layout">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>30 天清單</h2>
+      <span class="progress-pill" id="progressPill">0 / 30</span>
+    </div>
+    <div class="day-list" id="dayList"></div>
+  </div>
 
-      editor = new toastui.Editor({
-        el: wrap,
-        height: "100%",
-        previewStyle: "vertical",
-        initialEditType: state.ui.mode,
-        initialValue,
-        theme: (theme === "dark") ? "dark" : "light",
-        usageStatistics: false,
-        hideModeSwitch: true,
-        placeholder: "開始輸入…（Markdown / WYSIWYG 可切換）",
-        toolbarItems: [
-          ["heading","bold","italic","strike"],
-          ["hr","quote"],
-          ["ul","ol","task"],
-          ["table","link","image"],
-          ["code","codeblock"]
-        ]
-      });
+  <div class="panel">
+    <div class="editor">
+      <div class="tone-sample">
+        <b>🎙️ 語氣範本已鎖定：</b>「朋友們早安，今天來跟小狸老師學…」開場、「【慣用句】」括號注音、括號內縮排口語解釋、用「～～～」收尾、例句／延伸分段——AI 批次生成時會照這個調性寫。點「🤖 批次生成 Prompt」查看完整版本。
+      </div>
+      <div class="editor-top">
+        <div class="editor-title">
+          <span class="badge" id="dayBadge">Day 1</span>
+          <input id="topicInput" placeholder="本日主題（例：猫の手も借りたい／可留空讓AI自由發揮）">
+        </div>
+        <span class="char-pill" id="charPill">0 字</span>
+      </div>
 
-      editor.on("change", onEditorChange);
-      editor.on("keyup", debounce(updateToc, 200));
-      editor.on("focus", () => refreshSaveState("編輯中"));
+      <div class="emoji-row" id="emojiRow"></div>
 
-      attachEditorKeydownListener();
-      setModeButtonText();
-    }
+      <div class="mini-toolbar">
+        <button class="tb-btn" onclick="insertText('▍')">▍標題</button>
+        <button class="tb-btn" onclick="wrapSel('「','」')">「 」</button>
+        <button class="tb-btn" onclick="wrapSel('【','】')">【 】</button>
+        <button class="tb-btn" onclick="insertSignature()">⬇️ 插入簽名檔（固定放最後）</button>
+        <button class="tb-btn" onclick="insertBlock('tag')"># 插入 Hashtag</button>
+        <button class="tb-btn" onclick="applyEmojiToCurrent()">✨ 幫本篇加上emoji符號</button>
+        <button class="tb-btn" onclick="applyEmojiToAll()">✨ 一鍵幫全部30天加上emoji</button>
+        <button class="tb-btn" onclick="clearCurrent()" style="color:var(--danger);">🗑️ 清空本篇</button>
+      </div>
 
-    function attachEditorKeydownListener(){
-      try{
-        const els = editor.getEditorElements ? editor.getEditorElements() : null;
-        const nodes = [];
-        if(els){
-          Object.values(els).forEach(el => {
-            if(el && el.querySelectorAll){
-              el.querySelectorAll(".ProseMirror").forEach(pm => nodes.push(pm));
-            }
-          });
-        }else{
-          document.querySelectorAll(".ProseMirror").forEach(pm => nodes.push(pm));
-        }
-        nodes.forEach(pm => pm.addEventListener("keydown", onEditorKeydown, true));
-      }catch(e){}
-    }
+      <div class="editor-wrap">
+        <textarea class="editor-ta" id="mainTa" placeholder="在這裡寫這一篇的內容…"></textarea>
+      </div>
 
-    // =============================
-    // Slash commands
-    // =============================
-    function onEditorKeydown(ev){
-      if(!editor) return;
-      const trigger = (ev.key === " " || ev.key === "Enter");
-      if(!trigger) return;
+      <div class="row-actions">
+        <button class="nav-btn" onclick="goDay(-1)" title="上一篇">‹</button>
+        <button class="nav-btn" onclick="goDay(1)" title="下一篇">›</button>
+        <button class="btn primary" onclick="copyCurrentAndNext()">📋 複製本篇並前往下一篇</button>
+        <button class="btn ghost" onclick="copyCurrent()">📋 只複製本篇</button>
+      </div>
 
-      let mdSelStart = null;
-      let mdSelEnd = null;
-
-      try{
-        const sel = editor.getSelection();
-        if(editor.isMarkdownMode()){
-          mdSelStart = sel[0];
-          mdSelEnd = sel[1];
-        }else{
-          const conv = editor.convertPosToMatchEditorMode(sel[0], sel[1], "markdown");
-          mdSelStart = conv[0];
-          mdSelEnd = conv[1];
-        }
-      }catch(e){
-        return;
-      }
-
-      if(!mdSelStart || !Array.isArray(mdSelStart)) return;
-
-      const line = mdSelStart[0];
-      const ch = mdSelStart[1];
-
-      const md = editor.getMarkdown();
-      const lines = md.split("\n");
-      const current = (lines[line] ?? "");
-      const prefix = current.slice(0, ch);
-
-      const m = prefix.match(/^(\s*)\/([a-zA-Z0-9\-]+)$/);
-      if(!m) return;
-
-      const indent = m[1] || "";
-      const cmd = (m[2] || "").toLowerCase();
-
-      const expansions = getCommandExpansion(cmd);
-      if(!expansions) return;
-
-      ev.preventDefault();
-
-      const wasWw = !editor.isMarkdownMode();
-      const prevMode = wasWw ? "wysiwyg" : "markdown";
-
-      if(wasWw){
-        try{ editor.changeMode("markdown", true); }catch(e){}
-      }
-
-      const startCh = indent.length;
-      const endCh = startCh + ("/" + cmd).length;
-
-      try{
-        editor.setSelection([line, startCh], [line, endCh]);
-        editor.replaceSelection(expansions.insert);
-      }catch(e){}
-
-      try{
-        const afterMd = editor.getMarkdown().split("\n");
-        const newLineText = (afterMd[line] ?? "");
-        const newCh = Math.min(newLineText.length, (expansions.cursorCh ?? newLineText.length));
-        editor.setSelection([line, newCh], [line, newCh]);
-      }catch(e){}
-
-      if(wasWw){
-        try{ editor.changeMode(prevMode, true); }catch(e){}
-      }
-
-      scheduleAutoSave();
-      updateToc();
-    }
-
-    function getCommandExpansion(cmd){
-      if(/^h[1-6]$/.test(cmd)){
-        const level = Number(cmd.slice(1));
-        const hashes = "#".repeat(level);
-        return { insert: hashes + " ", cursorCh: (hashes.length + 1) };
-      }
-
-      switch(cmd){
-        case "quote":
-          return { insert: "> ", cursorCh: 2 };
-        case "hr":
-          return { insert: "---\n\n", cursorCh: 4 };
-        case "todo":
-          return { insert: "- [ ] ", cursorCh: 6 };
-        case "callout":
-        case "note":
-          return { insert: buildCallout("note"), cursorCh: buildCallout("note").split("\n")[0].length };
-        case "tip":
-          return { insert: buildCallout("tip"), cursorCh: buildCallout("tip").split("\n")[0].length };
-        case "warn":
-        case "warning":
-          return { insert: buildCallout("warn"), cursorCh: buildCallout("warn").split("\n")[0].length };
-        case "help":
-          return { insert: buildHelpBlock(), cursorCh: 0 };
-        default:
-          return null;
-      }
-    }
-
-    function buildCallout(kind){
-      const map = {
-        tip:  { emoji:"💡", title:"TIP",  cls:"tip"  },
-        warn: { emoji:"⚠️", title:"WARN", cls:"warn" },
-        note: { emoji:"📝", title:"NOTE", cls:"note" }
-      };
-      const x = map[kind] || map.note;
-      return `<div class="callout ${x.cls}">
-  <div class="calloutTitle">${x.emoji} ${x.title}</div>
-  內容寫這裡…
-</div>\n\n`;
-    }
-
-    function buildHelpBlock(){
-      return `\n\n---\n\n## / 指令小抄\n\n- /h1 ~ /h6：標題層級\n- /quote：引用（> ）\n- /callout：提示框（NOTE）\n- /tip：TIP 提示框\n- /warn：WARN 警告框\n- /note：NOTE 筆記框\n- /hr：分隔線\n- /todo：待辦\n\n---\n\n`;
-    }
-
-    // =============================
-    // Autosave + auto versions
-    // =============================
-    function onEditorChange(){
-      if(isBooting) return;
-      refreshSaveState("儲存中…");
-      scheduleAutoSave();
-      maybeAutoVersion();
-    }
-
-    function scheduleAutoSave(){
-      clearTimeout(autosaveTimer);
-      autosaveTimer = setTimeout(() => {
-        const id = state.currentId;
-        const p = state.posts[id];
-        if(!p || !editor) return;
-
-        p.markdown = editor.getMarkdown();
-        p.updatedAt = Date.now();
-
-        const t = document.getElementById("titleInput").value.trim();
-        if(t) p.title = t;
-
-        saveState();
-        renderPostList(false);
-        refreshSaveState("已儲存");
-      }, 350);
-    }
-
-    function fnv1a(str){
-      let h = 0x811c9dc5;
-      for(let i=0;i<str.length;i++){
-        h ^= str.charCodeAt(i);
-        h = Math.imul(h, 0x01000193) >>> 0;
-      }
-      return ("0000000" + h.toString(16)).slice(-8);
-    }
-
-    function snapshotHash(p){
-      return fnv1a([
-        p.title || "",
-        p.status || "",
-        p.markdown || "",
-        JSON.stringify(p.settings || {}),
-        (p.coverDataUrl || "").slice(0, 2000),
-        (p.coverDataUrl || "").slice(-2000)
-      ].join("||"));
-    }
-
-    function maybeAutoVersion(){
-      const p = state.posts[state.currentId];
-      if(!p || !editor) return;
-
-      const now = Date.now();
-      const interval = 10 * 60 * 1000;
-
-      const h = snapshotHash({
-        ...p,
-        markdown: editor.getMarkdown()
-      });
-
-      if(p.lastAutoHash && p.lastAutoHash === h) return;
-      if(p.lastAutoVerAt && (now - p.lastAutoVerAt) < interval) return;
-
-      pushVersion(p, { note:"auto" }, h);
-      p.lastAutoVerAt = now;
-      p.lastAutoHash = h;
-      saveState();
-    }
-
-    function pushVersion(p, extra={}, forcedHash=null){
-      const h = forcedHash || snapshotHash(p);
-      const v = {
-        ts: Date.now(),
-        title: p.title || "",
-        status: p.status || "draft",
-        markdown: editor ? editor.getMarkdown() : (p.markdown || ""),
-        settings: JSON.parse(JSON.stringify(p.settings || {})),
-        coverDataUrl: p.coverDataUrl || "",
-        hash: h,
-        note: extra.note || ""
-      };
-      p.versions = p.versions || [];
-      p.versions.unshift(v);
-      p.versions = p.versions.slice(0, 30);
-    }
-
-    // =============================
-    // Post list + filtering
-    // =============================
-    function renderPostList(keepScroll=true){
-      const list = document.getElementById("postList");
-      const prevScroll = list.scrollTop;
-
-      const items = Object.entries(state.posts)
-        .sort((a,b)=> (b[1].updatedAt||0) - (a[1].updatedAt||0))
-        .filter(([id,p]) => {
-          if(currentFilter === "all") return true;
-          if(currentFilter === "draft") return (p.status || "draft") === "draft";
-          if(currentFilter === "published") return (p.status || "draft") === "published";
-          return true;
-        });
-
-      list.innerHTML = "";
-
-      items.forEach(([id, p]) => {
-        const li = document.createElement("li");
-        li.className = "postItem" + (id === state.currentId ? " active" : "");
-
-        const badge = (p.status === "published")
-          ? `<span class="badge pub">已發佈</span>`
-          : `<span class="badge draft">草稿</span>`;
-
-        li.innerHTML = `
-          <div class="row">
-            <div class="t">${escapeHtml(p.title || "（未命名）")}</div>
-            ${badge}
+      <div style="margin-top:20px;border-top:1px dashed var(--border-2);padding-top:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+          <h3 style="margin:0;font-size:13px;font-weight:900;color:var(--ink-2);letter-spacing:.02em;">🖼️ IG 圖卡（煉金爐同款，4張一組）</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select id="themeSelect" onchange="onThemeSelectChange()" style="border:1.5px solid var(--border-2);background:var(--paper-2);color:var(--ink);border-radius:9px;padding:6px 10px;font-size:12px;font-weight:700;"></select>
+            <button class="btn ghost" onclick="randomizeTheme()">🎲 換底色</button>
+            <button class="btn primary" onclick="downloadDayCards(current)">⬇️ 下載本篇4張圖卡</button>
+            <button class="btn ghost" onclick="copyArticleHtml(current)">📋 複製文章HTML</button>
+            <button class="btn accent" onclick="publishToWordPress(current)">🚀 上傳到官網（實驗性）</button>
+            <button class="btn" onclick="goToWpAdmin()">🔧 前往網站後台</button>
           </div>
-          <div class="meta">${new Date(p.updatedAt||Date.now()).toLocaleString()}</div>
-        `;
-        li.addEventListener("click", () => {
-          if(id === state.currentId) return;
-          switchPost(id);
-        });
-        list.appendChild(li);
-      });
-
-      const total = Object.keys(state.posts).length;
-      document.getElementById("postCount").textContent = total + " 篇";
-
-      if(keepScroll) list.scrollTop = prevScroll;
-    }
-
-    function switchPost(id){
-      const cur = state.posts[state.currentId];
-      if(cur && editor){
-        cur.markdown = editor.getMarkdown();
-        cur.updatedAt = Date.now();
-      }
-
-      state.currentId = id;
-      saveState();
-
-      loadPostToEditor(id);
-      renderPostList();
-      updateToc();
-      refreshSaveState("已儲存");
-    }
-
-    function loadPostToEditor(id){
-      const p = state.posts[id];
-      if(!p || !editor) return;
-
-      document.getElementById("titleInput").value = p.title || "";
-      editor.setMarkdown(p.markdown || "", false);
-      editor.changeMode(state.ui.mode, true);
-
-      document.getElementById("settingSlug").value = (p.settings?.slug || "");
-      document.getElementById("settingTags").value = (p.settings?.tags || "");
-      document.getElementById("settingDesc").value = (p.settings?.desc || "");
-
-      syncStatusButton();
-      syncCoverPreview();
-      setModeButtonText();
-    }
-
-    function syncStatusButton(){
-      const p = state.posts[state.currentId];
-      const t = document.getElementById("statusText");
-      if(!p) return;
-      if(p.status === "published"){
-        t.textContent = "已發佈";
-        document.getElementById("btnToggleStatus").classList.add("soft");
-      }else{
-        t.textContent = "草稿";
-        document.getElementById("btnToggleStatus").classList.remove("soft");
-      }
-    }
-
-    // =============================
-    // TOC
-    // =============================
-    function updateToc(){
-      clearTimeout(tocTimer);
-      tocTimer = setTimeout(() => {
-        const toc = buildToc(editor ? editor.getMarkdown() : "");
-        renderToc(toc);
-      }, 120);
-    }
-
-    function buildToc(md){
-      const lines = md.split("\n");
-      const toc = [];
-      let inCode = false;
-      for(let i=0;i<lines.length;i++){
-        const line = lines[i];
-        if(line.trim().startsWith("```")){ inCode = !inCode; continue; }
-        if(inCode) continue;
-
-        const m = line.match(/^(#{1,6})\s+(.+?)\s*$/);
-        if(!m) continue;
-        const level = m[1].length;
-        const text = m[2].replace(/\s+#*\s*$/, "").trim();
-        if(!text) continue;
-        toc.push({ level, text, line: i });
-      }
-      return toc;
-    }
-
-    function renderToc(toc){
-      const wrap = document.getElementById("tocList");
-      wrap.innerHTML = "";
-
-      if(!toc.length){
-        wrap.innerHTML = `<div style="padding:10px;color:var(--muted);font-weight:1000;">（沒有標題。先用 # / ## 寫幾個吧）</div>`;
-        return;
-      }
-
-      toc.forEach(h => {
-        const item = document.createElement("div");
-        item.className = "tocItem";
-        item.dataset.line = String(h.line);
-
-        const indent = Math.max(0, h.level - 1) * 14;
-        item.innerHTML = `
-          <span class="tocLevel">H${h.level}</span>
-          <span style="width:${indent}px;flex:0 0 auto;"></span>
-          <span class="tocText">${escapeHtml(h.text)}</span>
-        `;
-        item.addEventListener("click", () => jumpToHeadingLine(h.line));
-        wrap.appendChild(item);
-      });
-    }
-
-    function jumpToHeadingLine(line){
-      if(!editor) return;
-
-      const mdStart = [line, 0];
-      const mdEnd = [line, 0];
-
-      try{
-        if(editor.isMarkdownMode()){
-          editor.setSelection(mdStart, mdEnd);
-        }else{
-          const wwPos = editor.convertPosToMatchEditorMode(mdStart, mdEnd, "wysiwyg");
-          editor.setSelection(wwPos[0], wwPos[1]);
-        }
-        editor.focus();
-      }catch(e){
-        try{
-          editor.changeMode("markdown", true);
-          editor.setSelection(mdStart, mdEnd);
-          editor.focus();
-        }catch(_){}
-      }
-    }
-
-    // =============================
-    // Cover upload / drag / paste (auto compress)
-    // =============================
-    function syncCoverPreview(){
-      const p = state.posts[state.currentId];
-      const prev = document.getElementById("coverPreview");
-      if(!p) return;
-
-      if(p.coverDataUrl){
-        prev.style.display = "block";
-        prev.innerHTML = `<img src="${p.coverDataUrl}" alt="cover">`;
-      }else{
-        prev.style.display = "none";
-        prev.innerHTML = "";
-      }
-    }
-
-    async function loadImageFromFile(file){
-      const dataUrl = await fileToDataUrl(file);
-      const compressed = await compressDataUrl(dataUrl, 1400, 0.88);
-      return compressed;
-    }
-
-    function fileToDataUrl(file){
-      return new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result || ""));
-        r.onerror = reject;
-        r.readAsDataURL(file);
-      });
-    }
-
-    function loadImg(src){
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
-      });
-    }
-
-    async function compressDataUrl(dataUrl, maxSize=1400, quality=0.88){
-      const img = await loadImg(dataUrl);
-      const w = img.naturalWidth || img.width;
-      const h = img.naturalHeight || img.height;
-      const scale = Math.min(1, maxSize / Math.max(w,h));
-      const nw = Math.max(1, Math.round(w * scale));
-      const nh = Math.max(1, Math.round(h * scale));
-
-      const canvas = document.createElement("canvas");
-      canvas.width = nw;
-      canvas.height = nh;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, nw, nh);
-
-      return canvas.toDataURL("image/jpeg", quality);
-    }
-
-    async function setCoverDataUrl(dataUrl){
-      const p = state.posts[state.currentId];
-      if(!p) return;
-      p.coverDataUrl = dataUrl || "";
-      p.updatedAt = Date.now();
-      saveState();
-      syncCoverPreview();
-      refreshSaveState("已儲存");
-    }
-
-    // =============================
-    // Reader
-    // =============================
-    function refreshReaderContent(){
-      const p = state.posts[state.currentId];
-      if(!p || !editor) return;
-
-      const title = p.title || "（未命名）";
-      const html = editor.getHTML();
-
-      const tags = (p.settings?.tags || "").trim();
-      const slug = (p.settings?.slug || "").trim();
-      const desc = (p.settings?.desc || "").trim();
-      const status = p.status === "published" ? "已發佈" : "草稿";
-
-      const meta = [
-        `狀態：${status}`,
-        slug ? `Slug：${slug}` : "",
-        tags ? `Tags：${tags}` : "",
-        desc ? `摘要：${desc}` : ""
-      ].filter(Boolean).join(" ｜ ") || "（尚未填寫文章設定）";
-
-      document.getElementById("readerTitle").textContent = title;
-      document.getElementById("readerMeta").textContent = meta;
-      document.getElementById("readerContent").innerHTML = html;
-
-      const coverWrap = document.getElementById("readerCover");
-      if(p.coverDataUrl){
-        coverWrap.style.display = "block";
-        coverWrap.innerHTML = `<img src="${p.coverDataUrl}" alt="cover">`;
-      }else{
-        coverWrap.style.display = "none";
-        coverWrap.innerHTML = "";
-      }
-
-      document.getElementById("readerStatus").textContent = "已更新";
-    }
-
-    // =============================
-    // Share images generator (unchanged)
-    // =============================
-    function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines){
-      const words = String(text || "").split(/\s+/).filter(Boolean);
-      let line = "";
-      let lines = [];
-      for(let i=0;i<words.length;i++){
-        const test = line ? (line + " " + words[i]) : words[i];
-        const w = ctx.measureText(test).width;
-        if(w > maxWidth && line){
-          lines.push(line);
-          line = words[i];
-          if(maxLines && lines.length >= maxLines) break;
-        }else{
-          line = test;
-        }
-      }
-      if(line && (!maxLines || lines.length < maxLines)) lines.push(line);
-      lines = maxLines ? lines.slice(0, maxLines) : lines;
-
-      lines.forEach((ln, idx) => ctx.fillText(ln, x, y + idx*lineHeight));
-      return lines.length;
-    }
-
-    async function buildShare(size){
-      const p = state.posts[state.currentId];
-      if(!p || !editor) return null;
-
-      const [W,H] = size.split("x").map(n => parseInt(n,10));
-      const canvas = document.getElementById("shareCanvas");
-      canvas.width = W;
-      canvas.height = H;
-      const ctx = canvas.getContext("2d");
-
-      const theme = document.getElementById("shareTheme").value;
-      const brand = document.getElementById("shareBrand").value.trim() || "小狸日語";
-      const color = document.getElementById("shareColor").value.trim() || "#2563eb";
-      const useCover = document.getElementById("shareUseCover").value === "yes";
-      const font = document.getElementById("shareFont").value || "Noto Sans TC";
-
-      const title = (p.title || "（未命名）").trim();
-      const desc = (p.settings?.desc || "").trim();
-      const tags = (p.settings?.tags || "").trim();
-
-      if(theme === "dark"){
-        ctx.fillStyle = "#0b1220";
-        ctx.fillRect(0,0,W,H);
-      }else{
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0,0,W,H);
-      }
-
-      if(useCover && p.coverDataUrl){
-        try{
-          const img = await loadImg(p.coverDataUrl);
-          const coverH = Math.round(H * 0.55);
-          const target = { x:0, y:0, w:W, h:coverH };
-
-          const iw = img.naturalWidth || img.width;
-          const ih = img.naturalHeight || img.height;
-
-          const scale = Math.max(target.w/iw, target.h/ih);
-          const sw = target.w / scale;
-          const sh = target.h / scale;
-          const sx = (iw - sw)/2;
-          const sy = (ih - sh)/2;
-
-          ctx.drawImage(img, sx, sy, sw, sh, target.x, target.y, target.w, target.h);
-
-          const g = ctx.createLinearGradient(0, 0, 0, coverH);
-          if(theme === "dark"){
-            g.addColorStop(0, "rgba(11,18,32,.05)");
-            g.addColorStop(1, "rgba(11,18,32,.85)");
-          }else{
-            g.addColorStop(0, "rgba(255,255,255,.05)");
-            g.addColorStop(1, "rgba(255,255,255,.92)");
-          }
-          ctx.fillStyle = g;
-          ctx.fillRect(0,0,W,coverH);
-
-        }catch(e){}
-      }else{
-        ctx.fillStyle = hexToRgba(color, theme === "dark" ? 0.20 : 0.12);
-        ctx.fillRect(0,0,W,Math.round(H*0.42));
-      }
-
-      const pad = Math.round(W * 0.06);
-      const cardX = pad;
-      const cardY = Math.round(H * 0.38);
-      const cardW = W - pad*2;
-      const cardH = H - cardY - pad;
-
-      ctx.fillStyle = theme === "dark" ? "rgba(255,255,255,.06)" : "rgba(2,6,23,.03)";
-      roundRect(ctx, cardX, cardY, cardW, cardH, 26, true, false);
-
-      ctx.strokeStyle = theme === "dark" ? "rgba(148,163,184,.25)" : "rgba(15,23,42,.10)";
-      ctx.lineWidth = 2;
-      roundRect(ctx, cardX, cardY, cardW, cardH, 26, false, true);
-
-      ctx.fillStyle = hexToRgba(color, 0.9);
-      roundRect(ctx, cardX, cardY, 10, cardH, 20, true, false);
-
-      const textColor = theme === "dark" ? "#e5e7eb" : "#0f172a";
-      const mutedColor = theme === "dark" ? "#94a3b8" : "#64748b";
-
-      ctx.fillStyle = textColor;
-      ctx.font = `900 ${Math.round(W*0.045)}px "${font}", "Noto Sans TC", sans-serif`;
-      const titleY = cardY + Math.round(cardH*0.26);
-      wrapText(ctx, title, cardX + 26, titleY, cardW - 52, Math.round(W*0.052), 3);
-
-      ctx.fillStyle = mutedColor;
-      ctx.font = `800 ${Math.round(W*0.028)}px "${font}", "Noto Sans TC", sans-serif`;
-      const descY = titleY + Math.round(W*0.19);
-      if(desc){
-        wrapText(ctx, desc, cardX + 26, descY, cardW - 52, Math.round(W*0.038), 3);
-      }else{
-        ctx.fillText("（尚未填摘要：可在文章設定填寫）", cardX + 26, descY);
-      }
-
-      if(tags){
-        ctx.fillStyle = hexToRgba(color, theme === "dark" ? 0.22 : 0.12);
-        const tagY = cardY + cardH - Math.round(W*0.11);
-        roundRect(ctx, cardX + 20, tagY, cardW - 40, Math.round(W*0.075), 18, true, false);
-        ctx.fillStyle = theme === "dark" ? "#cbd5e1" : "#1e293b";
-        ctx.font = `900 ${Math.round(W*0.025)}px "${font}", "Noto Sans TC", sans-serif`;
-        ctx.fillText("# " + tags.replaceAll(",", " · "), cardX + 32, tagY + Math.round(W*0.048));
-      }
-
-      ctx.fillStyle = theme === "dark" ? "rgba(226,232,240,.92)" : "rgba(15,23,42,.86)";
-      ctx.font = `1000 ${Math.round(W*0.028)}px "${font}", "Noto Sans TC", sans-serif`;
-      const brandW = ctx.measureText(brand).width;
-      ctx.fillText(brand, W - pad - brandW, H - Math.round(pad*0.55));
-
-      return canvas.toDataURL("image/png");
-    }
-
-    function roundRect(ctx, x, y, w, h, r, fill, stroke){
-      const rr = Math.min(r, w/2, h/2);
-      ctx.beginPath();
-      ctx.moveTo(x+rr, y);
-      ctx.arcTo(x+w, y, x+w, y+h, rr);
-      ctx.arcTo(x+w, y+h, x, y+h, rr);
-      ctx.arcTo(x, y+h, x, y, rr);
-      ctx.arcTo(x, y, x+w, y, rr);
-      ctx.closePath();
-      if(fill) ctx.fill();
-      if(stroke) ctx.stroke();
-    }
-
-    function hexToRgba(hex, a){
-      const h = hex.replace("#","").trim();
-      const v = h.length === 3
-        ? h.split("").map(c=>c+c).join("")
-        : h;
-      const r = parseInt(v.slice(0,2),16);
-      const g = parseInt(v.slice(2,4),16);
-      const b = parseInt(v.slice(4,6),16);
-      return `rgba(${r},${g},${b},${a})`;
-    }
-
-    // =============================
-    // Versions UI (unchanged)
-    // =============================
-    function renderVersions(){
-      const p = state.posts[state.currentId];
-      const wrap = document.getElementById("verList");
-      wrap.innerHTML = "";
-
-      if(!p) return;
-
-      const vs = (p.versions || []).slice();
-      if(vs.length === 0){
-        wrap.innerHTML = `<div style="color:var(--muted);font-weight:1000;">（目前還沒有版本。按上方「手動建立版本」先存一個吧）</div>`;
-        return;
-      }
-
-      vs.forEach((v, idx) => {
-        const div = document.createElement("div");
-        div.className = "verItem";
-        const note = v.note === "auto" ? "自動" : "手動";
-        const st = v.status === "published" ? "已發佈" : "草稿";
-        div.innerHTML = `
-          <div class="left">
-            <div class="t">${escapeHtml(v.title || "（未命名）")} <span class="pill gray" style="margin-left:8px;">${note}</span></div>
-            <div class="m">${new Date(v.ts).toLocaleString()} ｜ ${st}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start;">
+          <div id="cardEditors"></div>
+          <div style="border:1.5px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--paper-2);height:520px;">
+            <iframe id="cardPreviewFrame" title="圖卡預覽" style="width:100%;height:100%;border:0;background:#fff;"></iframe>
           </div>
-          <div class="right">
-            <button class="btn" data-act="preview" data-idx="${idx}">預覽</button>
-            <button class="btn primary" data-act="restore" data-idx="${idx}">復原</button>
-          </div>
-        `;
-        wrap.appendChild(div);
+        </div>
+        <div style="margin-top:12px;">
+          <label style="display:block;font-size:11.5px;font-weight:900;color:var(--ink-3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em;">🔗 這篇要給 Buffer 用的圖片網址</label>
+          <input id="imageUrlInput" class="mono" style="width:100%;border:1.5px solid var(--border);border-radius:8px;background:var(--paper-2);padding:8px 10px;font-size:12.5px;color:var(--ink);outline:none;" placeholder="https://i.imgur.com/xxxx.jpg">
+          <div style="font-size:11px;color:var(--ink-3);margin-top:6px;line-height:1.6;">下載圖卡後，挑一張（通常用第①張封面卡）上傳到 Imgur／Google Drive 公開分享，把「直接圖片連結」貼在這裡——Buffer 匯入 IG 貼文一定要有圖片網址才行。也可以按頂部「🖼️ 全部圖卡」一次打包30天、120張。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const TOTAL=30, KEY="kori_buffer_batch_v1";
+const EMOJIS=['👇','⬇️','👉','➡️','★','⭐️','❤️','💚','💜','❇️','🔸','♦️','✨','🔹','📌','🌸','🍀','☀️','🌙','🎯','🧩','💬','🔖','🌿','🦝','🎋','📖','✅','🌷','🍁'];
+function shuffledArray(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+const TONE_SAMPLE = `朋友們早安，今天來跟小狸老師學「慣用句」：
+
+【猫(ねこ)の手(て)も借(か)りたい】
+（猫（ねこ）の手（て）も借（か）りたい）
+
+　(忙到不行，忙得連貓的手都想借來幫忙)
+
+貓咪明明幫不上什麼忙，日本人卻說「連貓的手都想借來用」，用來形容忙到極點～～～
+
+例句
+今、猫の手も借りたいくらい忙しいです。
+現在忙到連貓的手都想借來幫忙。
+年末は猫の手も借りたいほど忙しくなります。
+年底會忙到連貓的手都想借。
+
+延伸
+類似說法：「目が回るほど忙しい」也是形容超級忙的意思喔！`;
+
+let state = { posts:{}, sig:"", tags:"", wp:{site:"", user:"", appPass:""} };
+let current = 1;
+let lastSel = {s:0, e:0}; // 記住編輯區最後一次的游標位置，就算按鈕點擊讓文字框失焦也能正確插入
+
+function blankPost(day){ return { day, topic:"", content:"", imageUrl:"", cards:null, themeIdx:null }; }
+
+function load(){
+  let raw = null;
+  try{ raw = localStorage.getItem(KEY); }catch(e){}
+  if(raw){
+    try{ state = JSON.parse(raw); }catch(e){}
+  }
+  if(!state.posts) state.posts = {};
+  for(let i=1;i<=TOTAL;i++){
+    if(!state.posts[i]) state.posts[i] = blankPost(i);
+    if(state.posts[i].imageUrl === undefined) state.posts[i].imageUrl = "";
+  }
+  if(state.sig===undefined) state.sig = defaultSig();
+  if(state.tags===undefined) state.tags = defaultTags();
+  if(!state.wp || typeof state.wp!=='object') state.wp = {site:"", user:"", appPass:""};
+  if(state.wp.site===undefined) state.wp.site = "";
+  if(state.wp.user===undefined) state.wp.user = "";
+  if(state.wp.appPass===undefined) state.wp.appPass = "";
+  if(!Array.isArray(state.recyclePool)) state.recyclePool = [];
+  if(!state.dayEmoji || typeof state.dayEmoji!=='object' || Object.keys(state.dayEmoji).length < TOTAL){
+    // 固定「一天對一個 emoji」的隨機分配，30個 emoji 剛好對應30天，保證每天都不一樣、且不會每次重整頁面就換掉
+    const shuffled = seededShuffle(EMOJIS, 20260908);
+    state.dayEmoji = {};
+    for(let i=1;i<=TOTAL;i++){ state.dayEmoji[i] = shuffled[(i-1) % shuffled.length]; }
+  }
+}
+function dayEmojiFor(day){
+  return (state.dayEmoji && state.dayEmoji[day]) || EMOJIS[(day-1)%EMOJIS.length];
+}
+function decorateWithEmoji(text, emoji){
+  const lines = (text||'').split('\n');
+  const emojiStartRe = /^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}⬀-⯿←-⇿✀-➿]/u;
+  return lines.map(line=>{
+    const trimmed = line.trim();
+    if(!trimmed) return line;
+    if(emojiStartRe.test(trimmed)) return line; // 已經有emoji開頭了，不重複加
+    const isKeywordLine = /^【.+】$/.test(trimmed);
+    const isLabelLine = /^(例句|延伸|延伸閱讀|重點|小提醒|小補充|補充|練習|翻譯)[:：、]?$/.test(trimmed) || /^(例句|延伸|延伸閱讀|重點|小提醒|小補充|補充|練習)[:：]/.test(trimmed);
+    if(isKeywordLine || isLabelLine){
+      const leadingSpace = line.match(/^\s*/)[0];
+      return leadingSpace + emoji + ' ' + trimmed;
+    }
+    return line;
+  }).join('\n');
+}
+function applyEmojiToCurrent(){
+  saveCurrentFromUI();
+  const p = state.posts[current];
+  if(!p.content || !p.content.trim()){ showToast('這一天還沒有內容'); return; }
+  const emoji = dayEmojiFor(current);
+  p.content = decorateWithEmoji(p.content, emoji);
+  document.getElementById('mainTa').value = p.content;
+  save();
+  updateCharCount();
+  showToast(`✨ 已用「${emoji}」幫第 ${current} 天加上符號`);
+}
+function applyEmojiToAll(){
+  saveCurrentFromUI();
+  let count = 0;
+  for(let i=1;i<=TOTAL;i++){
+    const p = state.posts[i];
+    if(!p.content || !p.content.trim()) continue;
+    p.content = decorateWithEmoji(p.content, dayEmojiFor(i));
+    count++;
+  }
+  save();
+  document.getElementById('mainTa').value = state.posts[current].content || '';
+  updateCharCount();
+  renderList();
+  showToast(count>0 ? `✨ 已幫 ${count} 天加上各自不同的emoji符號` : '目前 30 天都還是空的');
+}
+function defaultSig(){
+  return `＿＿＿＿＿＿
+❤️ 感謝支持❤️
+◼︎聽力一本到位《小狸日語新日檢N3聽力高分合格攻略》
+◼︎要學五十音《日語50音完全自學手冊》
+◼︎要打好N5-N3的重要日語文法《小狸日語觀念文法書》
+◼︎N3聽力ｘ口說訓練｜真人線上課
+◼︎自學口說訓練法｜Pressplay：小狸日語沉浸式口說訓練課`;
+}
+function defaultTags(){
+  return `#小狸日語 #日語學習 #日文教學 #日本語勉強 #日檢 #JLPT #N3 #N2 #N4 #N5 #日語口說 #日語文法`;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  if(msg) t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(()=>t.classList.remove('show'), 1700);
+}
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+function toggleSettings(){
+  document.getElementById('settingsBody').classList.toggle('open');
+}
+
+function mulberry32(seed){
+  let t = seed >>> 0;
+  return function(){
+    t |= 0; t = (t + 0x6D2B79F5) | 0;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function seededShuffle(arr, seed){
+  const rnd = mulberry32(seed);
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(rnd()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function renderEmojis(day){
+  const row = document.getElementById('emojiRow');
+  // 每一天用天數當種子洗牌，確保「同一天永遠看到同一組」但「每一天彼此不同、不會每天都長一樣」
+  const seed = (Number(day)||1) * 2654435761;
+  const shuffled = seededShuffle(EMOJIS, seed).slice(0,14);
+  row.innerHTML = shuffled.map(e=>`<button class="emoji-btn" onclick="insertText('${e}')">${e}</button>`).join('');
+}
+
+function renderList(){
+  const list = document.getElementById('dayList');
+  list.innerHTML = '';
+  let done = 0;
+  for(let i=1;i<=TOTAL;i++){
+    const p = state.posts[i];
+    const hasContent = !!(p.content && p.content.trim());
+    if(hasContent) done++;
+    const div = document.createElement('div');
+    div.className = 'day-item' + (i===current?' active':'') + (hasContent?' done':'');
+    div.innerHTML = `<div class="day-num">${i}</div>
+      <div class="day-meta">
+        <div class="day-title">${escapeHtml(p.topic || (hasContent?'（未命名主題）':'尚未填寫'))}</div>
+        <div class="day-preview">${escapeHtml((p.content||'').slice(0,26).replace(/\n/g,' '))||'—'}</div>
+      </div>
+      <button class="day-copy-mini" title="複製本篇" onclick="event.stopPropagation();copyDay(${i})">📋</button>`;
+    div.onclick = ()=>selectDay(i);
+    list.appendChild(div);
+  }
+  document.getElementById('progressPill').textContent = done + ' / ' + TOTAL;
+}
+
+function selectDay(day){
+  saveCurrentFromUI();
+  current = day;
+  const p = state.posts[day];
+  document.getElementById('dayBadge').textContent = 'Day ' + day;
+  document.getElementById('topicInput').value = p.topic || '';
+  document.getElementById('mainTa').value = p.content || '';
+  document.getElementById('imageUrlInput').value = p.imageUrl || '';
+  updateCharCount();
+  renderList();
+  renderCardEditors(day);
+  renderCardsPreview(day);
+  syncThemeSelect(day);
+  renderEmojis(day);
+}
+function goDay(delta){
+  let next = current + delta;
+  if(next < 1) next = 1;
+  if(next > TOTAL) next = TOTAL;
+  selectDay(next);
+}
+function saveCurrentFromUI(){
+  const p = state.posts[current];
+  p.topic = document.getElementById('topicInput').value;
+  p.content = document.getElementById('mainTa').value;
+  const imgEl = document.getElementById('imageUrlInput');
+  if(imgEl) p.imageUrl = imgEl.value.trim();
+  save();
+}
+
+/* ===================================================================
+   IG 圖卡系統 —— 從煉金爐搬過來的和柄花紋卡片（封面卡＋3張例句卡）
+   =================================================================== */
+var LOGO_HTML='<div style="font-size:4.5cqi; font-weight:900; color:#888; letter-spacing:0.1em; text-align:center; opacity:0.8;">小狸日語</div>';
+var FA_ICONS = ["fa-star","fa-gem","fa-leaf","fa-book","fa-crown","fa-rocket","fa-lightbulb","fa-bolt","fa-paper-plane","fa-seedling","fa-sun","fa-clover","fa-shapes","fa-cube","fa-compass","fa-fire","fa-heart","fa-moon","fa-puzzle-piece","fa-key"];
+var SVGS = {
+  asanoha:`<svg width="40" height="69.282" viewBox="0 0 40 69.282" xmlns="http://www.w3.org/2000/svg"><g opacity="0.15" stroke="_COLOR_" stroke-width="1.5" fill="none"><path d="M20 0 L40 11.547 L40 34.641 L20 46.188 L0 34.641 L0 11.547 Z"/><path d="M20 0 L20 46.188 M0 11.547 L40 34.641 M0 34.641 L40 11.547 M20 23.094 L40 11.547 M20 23.094 L40 34.641 M20 23.094 L0 11.547 M20 23.094 L0 34.641"/><path d="M20 46.188 L40 57.735 L40 80.829 L20 92.376 L0 80.829 L0 57.735 Z"/><path d="M20 46.188 L20 92.376 M0 57.735 L40 80.829 M0 80.829 L40 57.735 M20 69.282 L40 57.735 M20 69.282 L40 80.829 M20 69.282 L0 57.735 M20 69.282 L0 80.829"/></g></svg>`,
+  yagasuri:`<svg width="20" height="40" viewBox="0 0 20 40" xmlns="http://www.w3.org/2000/svg"><g opacity="0.12" fill="_COLOR_"><path d="M0 10 L10 0 L20 10 L20 20 L10 10 L0 20 Z"/><path d="M0 30 L10 20 L20 30 L20 40 L10 30 L0 40 Z"/></g></svg>`,
+  samekomon:`<svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><g opacity="0.15"><circle cx="2.5" cy="2.5" r="2" fill="_COLOR_"/><circle cx="7.5" cy="7.5" r="2" fill="_COLOR_"/></g></svg>`,
+  seigaiha:`<svg width="40" height="20" viewBox="0 0 40 20" xmlns="http://www.w3.org/2000/svg"><g opacity="0.15" fill="none" stroke="_COLOR_" stroke-width="2"><circle cx="20" cy="20" r="14"/><circle cx="20" cy="20" r="7"/><circle cx="0" cy="20" r="14"/><circle cx="0" cy="20" r="7"/><circle cx="40" cy="20" r="14"/><circle cx="40" cy="20" r="7"/></g></svg>`,
+  shippo:`<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g opacity="0.15" fill="none" stroke="_COLOR_" stroke-width="2"><circle cx="0" cy="0" r="20"/><circle cx="40" cy="0" r="20"/><circle cx="0" cy="40" r="20"/><circle cx="40" cy="40" r="20"/><circle cx="20" cy="20" r="20"/></g></svg>`,
+  kikko: `<svg width="34.64" height="60" viewBox="0 0 34.64 60" xmlns="http://www.w3.org/2000/svg"><g opacity="0.15" fill="none" stroke="_COLOR_" stroke-width="2"><path d="M17.32 0 L34.64 10 L34.64 30 L17.32 40 L0 30 L0 10 Z"/><path d="M17.32 60 L34.64 50 L34.64 30 L17.32 40 L0 30 L0 50 Z"/></g></svg>`,
+  ichimatsu: `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path opacity="0.1" fill="_COLOR_" d="M0 0h10v10H0zm10 10h10v10H10z"/></svg>`,
+  tatewaku: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path opacity="0.15" fill="none" stroke="_COLOR_" stroke-width="2" d="M10 0 C20 10, 20 10, 10 20 C0 30, 0 30, 10 40 M30 0 C40 10, 40 10, 30 20 C20 30, 20 30, 30 40"/></svg>`,
+  karakusa: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path opacity="0.15" fill="none" stroke="_COLOR_" stroke-width="2" d="M0 20 Q10 0 20 20 T40 20 M20 20 Q30 40 40 20 T60 20"/></svg>`,
+  kanoko: `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path opacity="0.12" fill="_COLOR_" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 12a4 4 0 110-8 4 4 0 010 8z"/></svg>`,
+  hishi: `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path opacity="0.15" fill="none" stroke="_COLOR_" stroke-width="1.5" d="M10 0L20 10L10 20L0 10z"/></svg>`,
+  mameshibori: `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle opacity="0.15" cx="10" cy="10" r="4" fill="_COLOR_"/></svg>`
+};
+var THEMES = [
+  { name: '桜色 (麻葉紋)', primary: '#eebbcb', accent: '#c08eaf', cardBg: '#fcfaf2', svg: SVGS.asanoha, size: '40px 69.28px' },
+  { name: '紺色 (箭羽紋)', primary: '#223a70', accent: '#89c3eb', cardBg: '#f4f8ff', svg: SVGS.yagasuri, size: '20px 40px' },
+  { name: '若草 (鮫小紋)', primary: '#8ab757', accent: '#e6c35c', cardBg: '#f6fbf2', svg: SVGS.samekomon, size: '15px 15px' },
+  { name: '縹色 (波紋)', primary: '#2792c3', accent: '#f2c299', cardBg: '#f0f7fa', svg: SVGS.seigaiha, size: '40px 20px' },
+  { name: '山吹 (七寶紋)', primary: '#e0861a', accent: '#65a30d', cardBg: '#fffcf7', svg: SVGS.shippo, size: '40px 40px' },
+  { name: '鶯色 (龜甲紋)', primary: '#6e7b43', accent: '#d0af4c', cardBg: '#f7f8f0', svg: SVGS.kikko, size: '34.64px 60px' },
+  { name: '常磐 (方格紋)', primary: '#1b5e3d', accent: '#e57373', cardBg: '#f2f8f5', svg: SVGS.ichimatsu, size: '30px 30px' },
+  { name: '水浅葱 (蒸汽紋)', primary: '#70a19f', accent: '#a855f7', cardBg: '#f2fafa', svg: SVGS.tatewaku, size: '40px 40px' },
+  { name: '萌黄 (蔓藤紋)', primary: '#9ec46a', accent: '#facc15', cardBg: '#f7fcf2', svg: SVGS.karakusa, size: '40px 40px' },
+  { name: '撫子 (鹿仔紋)', primary: '#d7a3b6', accent: '#7fb5e6', cardBg: '#fff9fc', svg: SVGS.kanoko, size: '20px 20px' },
+  { name: '古代紫 (菱形紋)', primary: '#7058a3', accent: '#e0861a', cardBg: '#f9f7fc', svg: SVGS.hishi, size: '30px 30px' },
+  { name: '藤納戸 (豆紋)', primary: '#5a5c9c', accent: '#d7a3b6', cardBg: '#f5f6fc', svg: SVGS.mameshibori, size: '20px 20px' },
+  { name: '珊瑚 (麻葉紋)', primary: '#e0674f', accent: '#f2b134', cardBg: '#fff6f2', svg: SVGS.asanoha, size: '40px 69.28px' },
+  { name: '抹茶 (龜甲紋)', primary: '#5d7a4f', accent: '#e8c168', cardBg: '#f5f9f0', svg: SVGS.kikko, size: '34.64px 60px' },
+  { name: '瑠璃 (波紋)', primary: '#1a4d8f', accent: '#5ec9d6', cardBg: '#eef5fb', svg: SVGS.seigaiha, size: '40px 20px' },
+  { name: '蜜柑 (方格紋)', primary: '#e07b1a', accent: '#3d8f6b', cardBg: '#fffaf2', svg: SVGS.ichimatsu, size: '30px 30px' },
+  { name: '薄墨 (蒸汽紋)', primary: '#4b4f58', accent: '#c48fd6', cardBg: '#f5f5f7', svg: SVGS.tatewaku, size: '40px 40px' },
+  { name: '桃色 (鹿の子)', primary: '#d65a86', accent: '#66a5c9', cardBg: '#fff2f6', svg: SVGS.kanoko, size: '20px 20px' },
+  { name: '若竹 (箭羽紋)', primary: '#2f8f5b', accent: '#e6a53c', cardBg: '#f2fbf5', svg: SVGS.yagasuri, size: '20px 40px' },
+  { name: '梅紫 (菱形紋)', primary: '#8a4f8f', accent: '#f2c299', cardBg: '#fbf3fb', svg: SVGS.hishi, size: '30px 30px' },
+  { name: '空色 (鮫小紋)', primary: '#4a90c9', accent: '#f2a65a', cardBg: '#f0f8fd', svg: SVGS.samekomon, size: '15px 15px' },
+  { name: '柿渋 (蔓藤紋)', primary: '#a8542f', accent: '#7a9e5c', cardBg: '#fdf6f2', svg: SVGS.karakusa, size: '40px 40px' },
+  { name: '藍鼠 (豆紋)', primary: '#3d5a6c', accent: '#d68a8a', cardBg: '#f2f6f8', svg: SVGS.mameshibori, size: '20px 20px' },
+  { name: '躑躅 (七寶紋)', primary: '#c94f7a', accent: '#4fa8a0', cardBg: '#fdf2f6', svg: SVGS.shippo, size: '40px 40px' }
+];
+function getSvgUrl(svgString, color) { return `url("data:image/svg+xml,${encodeURIComponent(svgString.replace(/_COLOR_/g, color))}")`; }
+function getRandomFaIcon(dayNum, idxOffset) { return FA_ICONS[(Number(dayNum) * 3 + Number(idxOffset) * 7) % FA_ICONS.length]; }
+function convertToRuby(text){
+  if(text===undefined||text===null) return "";
+  text = String(text);
+  return text.replace(/([一-龯々ヶ]+)[（(]([ぁ-んァ-ヶー]+)[）)]/g,"<ruby>$1<rt>$2</rt></ruby>");
+}
+function cleanNote(s){
+  if(!s) return "";
+  return String(s).replace(/(?:->|→|ー＞).*?(?=\n|$)/g, "").replace(/[（）()]/g, "");
+}
+function nl2br(str){ return (str||"").replace(/\n/g,"<br>"); }
+function escapeAttr(s){ return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function blankCards(){
+  return [
+    {title:"", main:"", note:""},
+    {title:"基礎例句", main:"", note:""},
+    {title:"進階例句", main:"", note:""},
+    {title:"實戰例句", main:"", note:""}
+  ];
+}
+function ensureCards(day){
+  const p = state.posts[day];
+  if(!p.cards || p.cards.length!==4) p.cards = blankCards();
+  if(p.themeIdx===undefined || p.themeIdx===null) p.themeIdx = (day-1) % THEMES.length;
+  return p;
+}
+
+function renderCardEditors(day){
+  ensureCards(day);
+  const p = state.posts[day];
+  const box = document.getElementById('cardEditors');
+  const labels = ["① 封面卡","② 基礎例句","③ 進階例句","④ 實戰例句"];
+  const mainPh = ["大標題（關鍵字，可用「漢字(かな)」標假名）","基礎例句日文","進階例句日文","實戰例句日文"];
+  const titlePh = ["標籤（例：慣用句）","小標題","小標題","小標題"];
+  const notePh = ["副標說明","中文翻譯","中文翻譯","中文翻譯"];
+  box.innerHTML = p.cards.map((c,idx)=>`
+    <div class="card-edit-box" data-idx="${idx}">
+      <div class="ce-label">${labels[idx]}</div>
+      <input class="ce-title" placeholder="${titlePh[idx]}" value="${escapeAttr(c.title)}">
+      <input class="ce-main" placeholder="${mainPh[idx]}" value="${escapeAttr(c.main)}">
+      <textarea class="ce-note" placeholder="${notePh[idx]}">${escapeAttr(c.note)}</textarea>
+    </div>
+  `).join('');
+  box.querySelectorAll('.card-edit-box').forEach(el=>{
+    const idx = Number(el.getAttribute('data-idx'));
+    el.querySelector('.ce-title').addEventListener('input', e=>{ state.posts[current].cards[idx].title = e.target.value; onCardEdit(); });
+    el.querySelector('.ce-main').addEventListener('input', e=>{ state.posts[current].cards[idx].main = e.target.value; onCardEdit(); });
+    el.querySelector('.ce-note').addEventListener('input', e=>{ state.posts[current].cards[idx].note = e.target.value; onCardEdit(); });
+  });
+}
+let cardRenderTimer = null;
+function onCardEdit(){
+  save();
+  clearTimeout(cardRenderTimer);
+  cardRenderTimer = setTimeout(()=>renderCardsPreview(current), 200);
+}
+function applyTheme(day, idx){
+  ensureCards(day);
+  state.posts[day].themeIdx = idx;
+  save();
+  renderCardsPreview(day);
+  syncThemeSelect(day);
+}
+function randomizeTheme(){
+  applyTheme(current, Math.floor(Math.random()*THEMES.length));
+  showToast('🎲 已更換底色');
+}
+function syncThemeSelect(day){
+  const sel = document.getElementById('themeSelect');
+  if(!sel) return;
+  if(!sel.options.length){
+    sel.innerHTML = THEMES.map((t,i)=>`<option value="${i}">${escapeHtml(t.name)}</option>`).join('');
+  }
+  ensureCards(day);
+  sel.value = String(state.posts[day].themeIdx || 0);
+}
+function onThemeSelectChange(){
+  const sel = document.getElementById('themeSelect');
+  applyTheme(current, Number(sel.value));
+}
+
+function generateCardCSS(theme){
+  return '@import url(\'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap\');:root { --primary:'+theme.primary+'; --accent:'+theme.accent+'; --card-bg:'+theme.cardBg+'; --inner-bg:#fdfbf6; --shadow-color:rgba(0,0,0,0.2); --text:#3a3226; --paper-border:#eaddc5; }*{box-sizing:border-box}html,body{margin:0;padding:0;font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;font-weight:400;color:#334155;background:#f8fafc;}.kotanuki-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;padding:16px;justify-items:center;}.ig-card{container-type:inline-size;width:100%;max-width:300px;aspect-ratio:1/1;border-radius:8px;background-color:var(--card-bg);background-image:'+getSvgUrl(theme.svg, theme.primary)+';background-size:'+theme.size+';background-position:center;background-repeat:repeat;border:8px solid #f7f2e6;box-shadow:2px 4px 12px var(--shadow-color);display:flex;flex-direction:column;overflow:hidden;position:relative;margin:0 auto}.card-header{padding:4cqi 5cqi 0 5cqi;display:flex;align-items:center;flex-shrink:0;z-index:2;gap:3cqi}.header-badge{background:var(--primary);color:#fff;font-weight:600;font-size:5cqi;width:9cqi;height:9cqi;border-radius:4px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.15);flex-shrink:0;}.header-title{font-size:4.5cqi;font-weight:600;color:var(--primary);background:#fff;padding:1.5cqi 3.5cqi;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.08);white-space:nowrap;letter-spacing:0.05em;}.card-body{flex-grow:1;display:flex;flex-direction:column;justify-content:center;padding:1cqi 5cqi 10cqi 5cqi;z-index:2;position:relative}.text-bg{background:var(--inner-bg);padding:5cqi 5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);position:relative;text-align:center;width:96%;max-width:100%;margin:0 auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box !important; word-break:normal !important; overflow-wrap:break-word !important;}.fa-icon{font-size:8cqi;display:block;margin:0 auto 2cqi auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1));opacity:0.9;}.text-primary{color:var(--primary)} .text-accent{color:var(--accent)}.main-text{font-size:7.8cqi;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:2cqi;letter-spacing:0.02em;word-break:normal !important; overflow-wrap:break-word !important;}.note-box{margin-top:3cqi;line-height:1.5;color:#594d3c;font-weight:400;text-align:justify;font-size:4.8cqi;padding:0 2cqi;position:relative;z-index:2;}ruby{font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;}rt{font-size:0.48em;color:var(--primary);font-weight:600;text-align:center;}.cover-body{align-items:center;text-align:center;padding-top:6cqi;padding-bottom:12cqi}.cover-title{font-size:11.5cqi;color:var(--primary);font-weight:600;margin-bottom:3cqi;letter-spacing:0.02em;line-height:1.25;margin-top:2cqi;word-break:normal !important; overflow-wrap:break-word !important;}.tag-pill{display:inline-block;background:var(--accent);color:white;padding:1.5cqi 5cqi;border-radius:2px;font-size:4.5cqi;font-weight:500;margin-top:3cqi;margin-bottom:4cqi;box-shadow:1px 2px 4px rgba(0,0,0,0.15);letter-spacing:0.05em;position:relative;}.cover-desc{font-size:5.5cqi;color:var(--text);font-weight:400;line-height:1.6;background:var(--inner-bg);padding:4.5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);width:96%;margin:0 auto;text-align:center;box-sizing:border-box !important;}.logo-footer{position:absolute;left:0;right:0;bottom:3cqi;z-index:10;display:flex;justify-content:center;pointer-events:none;}';
+}
+function generateCardsHTML(day){
+  const p = ensureCards(day);
+  const cards = p.cards;
+  const word = p.topic || '關鍵字';
+  const c0 = cards[0] || {title:'慣用句', main:word, note:''};
+  const c1 = cards[1] || {title:'基礎例句', main:'', note:''};
+  const c2 = cards[2] || {title:'進階例句', main:'', note:''};
+  const c3 = cards[3] || {title:'實戰例句', main:'', note:''};
+  return '<div class="ig-card" id="card-0"><div class="card-header"><div class="header-badge">01</div><div class="header-title">這個字，小狸日語教你用</div></div><div class="card-body cover-body"><span class="tag-pill">' + escapeHtml(c0.title||'慣用句') + '</span><div class="cover-title">' + convertToRuby(c0.main||word) + '</div><div class="cover-desc">' + escapeHtml(cleanNote(c0.note)) + '</div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-1"><div class="card-header"><div class="header-badge">02</div><div class="header-title">' + escapeHtml(c1.title||'基礎例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,1) + ' fa-icon text-primary"></i><div class="main-text">' + convertToRuby(c1.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c1.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-2"><div class="card-header"><div class="header-badge">03</div><div class="header-title">' + escapeHtml(c2.title||'進階例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,2) + ' fa-icon text-accent"></i><div class="main-text">' + convertToRuby(c2.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c2.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div><div class="ig-card" id="card-3"><div class="card-header"><div class="header-badge">04</div><div class="header-title">' + escapeHtml(c3.title||'實戰例句') + '</div></div><div class="card-body"><div class="text-bg"><i class="fa-solid ' + getRandomFaIcon(day,3) + ' fa-icon text-primary"></i><div class="main-text">' + convertToRuby(c3.main||'') + '</div><div class="note-box">' + nl2br(cleanNote(c3.note)) + '</div></div></div><div class="logo-footer">' + LOGO_HTML + '</div></div>';
+}
+function buildCardDocHTML(day, withDownloadScript){
+  const p = ensureCards(day);
+  const theme = THEMES[p.themeIdx] || THEMES[0];
+  const cardsHtml = generateCardsHTML(day);
+  const fileWord = (p.topic||('day'+day)).replace(/[^一-龥぀-ヿ゠-ヿa-zA-Z0-9]/g,'').slice(0,20) || ('day'+day);
+  let doc = '<!doctype html><html lang="ja"><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"><style>'
+    + generateCardCSS(theme)
+    + '</style></head><body><div class="kotanuki-grid">' + cardsHtml + '</div>';
+  if(withDownloadScript){
+    doc += '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>'
+      + '<script>var __fileWord=' + JSON.stringify(fileWord) + ';'
+      + 'function __freezeCqiStyles(root){ var props=["fontSize","paddingTop","paddingRight","paddingBottom","paddingLeft","marginTop","marginRight","marginBottom","marginLeft","letterSpacing","lineHeight","width","height","minWidth","minHeight","maxWidth","maxHeight","borderRadius","top","left","right","bottom","gap"]; var all=[root].concat(Array.prototype.slice.call(root.querySelectorAll("*"))); var originals=all.map(function(el){ return {el:el, cssText:el.style.cssText}; }); all.forEach(function(el){ var cs=window.getComputedStyle(el); props.forEach(function(p){ try{ el.style[p]=cs[p]; }catch(e){} }); }); return function(){ originals.forEach(function(o){ o.el.style.cssText=o.cssText; }); }; }'
+      + 'async function dlCards(){ const cards=document.querySelectorAll(".ig-card"); for(let i=0;i<cards.length;i++){ const card=cards[i]; const origShadow=card.style.boxShadow; card.style.boxShadow="none";'
+      + ' const restoreCqi = __freezeCqiStyles(card); await new Promise(r=>requestAnimationFrame(r));'
+      + ' try{ const canvas=await html2canvas(card,{scale:3,useCORS:true,backgroundColor:null,logging:false}); const link=document.createElement("a"); link.download=__fileWord+(i+1)+".jpg"; link.href=canvas.toDataURL("image/jpeg",0.95); link.click(); await new Promise(r=>setTimeout(r,450)); }catch(e){console.error(e);}finally{ card.style.boxShadow=origShadow; restoreCqi(); } } }'
+      + '<\/script>';
+  }
+  doc += '</body></html>';
+  return doc;
+}
+function renderCardsPreview(day){
+  const frame = document.getElementById('cardPreviewFrame');
+  if(!frame) return;
+  frame.srcdoc = buildCardDocHTML(day, true);
+}
+function downloadDayCards(day){
+  saveCurrentFromUI();
+  const frame = document.getElementById('cardPreviewFrame');
+  if(!frame) return;
+  const run = ()=>{ try{ if(frame.contentWindow && frame.contentWindow.dlCards){ frame.contentWindow.dlCards().then(()=>showToast('⬇️ 4張圖卡下載完畢')); } }catch(e){ console.error(e); } };
+  if(frame.contentWindow && frame.contentWindow.dlCards) run();
+  else { frame.onload = run; frame.srcdoc = buildCardDocHTML(day, true); }
+}
+async function renderCardBlobs(day){
+  if(typeof html2canvas === 'undefined'){
+    throw new Error('圖卡產生功能需要網路連線才能載入必要套件');
+  }
+  const stage = document.createElement('iframe');
+  stage.style.position = 'fixed'; stage.style.left = '-9999px'; stage.style.width = '1400px'; stage.style.height = '1400px';
+  document.body.appendChild(stage);
+  try{
+    await new Promise((resolve, reject)=>{
+      stage.onload = resolve;
+      stage.onerror = reject;
+      stage.srcdoc = buildCardDocHTML(day, false);
+    });
+    await new Promise(r=>setTimeout(r, 60));
+    const doc = stage.contentDocument;
+    const cardEls = doc.querySelectorAll('.ig-card');
+    const topic = (state.posts[day].topic || ('day'+day)).replace(/[\\/:*?"<>|]/g,'').slice(0,20) || ('day'+day);
+    const out = [];
+    for(let i=0;i<cardEls.length;i++){
+      const canvas = await html2canvas(cardEls[i], {scale:2, useCORS:true, backgroundColor:null, logging:false});
+      const blob = await new Promise(res=>canvas.toBlob(b=>res(b), 'image/jpeg', 0.92));
+      out.push({ filename: `Day${String(day).padStart(2,'0')}_${topic}_${i+1}.jpg`, blob });
+    }
+    return out;
+  }finally{
+    document.body.removeChild(stage);
+  }
+}
+
+function copyArticleHtml(day){
+  saveCurrentFromUI();
+  const p = state.posts[day];
+  const theme = THEMES[ensureCards(day).themeIdx] || THEMES[0];
+  const cardsHtml = generateCardsHTML(day);
+  const cardsCss = generateCardCSS(theme);
+  const bodyParas = (p.content||'').split(/\n{2,}/).map(par=>par.trim()).filter(Boolean)
+    .map(par=>'<p>' + convertToRuby(escapeHtml(par)).replace(/\n/g,'<br>') + '</p>').join('\n');
+  const html = `<style>${cardsCss}</style>\n<div class="kotanuki-grid">${cardsHtml}</div>\n${bodyParas}`;
+  copyToClipboard(html, `📋 Day ${day} 文章HTML 已複製`);
+}
+
+function goToWpAdmin(){
+  const site = (state.wp && state.wp.site ? state.wp.site : 'https://japanese.hikky.com.tw').replace(/\/+$/,'');
+  window.open(site + '/wp-admin/post-new.php', '_blank');
+}
+
+async function publishToWordPress(day){
+  saveCurrentFromUI();
+  const wp = state.wp || {};
+  const site = (wp.site||'').trim().replace(/\/+$/,'');
+  const user = (wp.user||'').trim();
+  const appPass = (wp.appPass||'').trim();
+  if(!site || !user || !appPass){
+    showToast('請先在「⚙️ 簽名檔／Hashtag」設定裡填好 WordPress 網站網址／使用者名稱／應用程式密碼');
+    document.getElementById('settingsBody').classList.add('open');
+    return;
+  }
+  const p = state.posts[day];
+  const authHeader = 'Basic ' + btoa(unescape(encodeURIComponent(user + ':' + appPass)));
+  showToast('⏳ 正在上傳圖卡與文章…');
+  try{
+    const blobs = await renderCardBlobs(day);
+    const imageUrls = [];
+    for(const item of blobs){
+      const res = await fetch(site + '/wp-json/wp/v2/media', {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Disposition': `attachment; filename="${item.filename}"`,
+          'Content-Type': 'image/jpeg'
+        },
+        body: item.blob
       });
+      if(!res.ok) throw new Error('圖片上傳失敗（HTTP ' + res.status + '）');
+      const data = await res.json();
+      if(data && data.source_url) imageUrls.push(data.source_url);
+    }
+    const bodyParas = (p.content||'').split(/\n{2,}/).map(par=>par.trim()).filter(Boolean)
+      .map(par=>'<p>' + convertToRuby(escapeHtml(par)).replace(/\n/g,'<br>') + '</p>').join('\n');
+    const imgHtml = imageUrls.map(u=>`<p><img src="${u}" alt=""></p>`).join('\n');
+    const content = imgHtml + '\n' + bodyParas;
+    const title = p.topic && p.topic.trim() ? p.topic.trim() : ('Day ' + day);
+    const res = await fetch(site + '/wp-json/wp/v2/posts', {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: 'draft', title, content })
+    });
+    if(!res.ok) throw new Error('建立草稿失敗（HTTP ' + res.status + '）');
+    const data = await res.json();
+    const editUrl = data.link || (site + '/wp-admin/post.php?post=' + data.id + '&action=edit');
+    showToast('🚀 已建立草稿：' + editUrl);
+  }catch(err){
+    console.error(err);
+    alert('上傳失敗，最常見原因是瀏覽器安全限制（CORS）。你可以改用「複製文章HTML」貼到 WordPress，或請工程師/外掛在網站加入允許跨網域上傳的設定。\n\n錯誤訊息：' + err.message);
+  }
+}
 
-      wrap.querySelectorAll("button").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const idx = Number(btn.dataset.idx);
-          const act = btn.dataset.act;
-          if(Number.isNaN(idx)) return;
-          if(act === "restore") restoreVersion(idx);
-          if(act === "preview") previewVersion(idx);
-        });
+function openRecycleModal(){
+  document.getElementById('recycleArea').value = '';
+  renderRecyclePool();
+  openModal('recycleModal');
+}
+function parseIntoRecyclePool(){
+  const raw = document.getElementById('recycleArea').value;
+  const blocks = raw.split(/^\s*---\s*$/m).map(b=>b.trim()).filter(Boolean);
+  if(blocks.length===0){ showToast('請先貼上內容'); return; }
+  let added = 0;
+  blocks.forEach(block=>{
+    let imageUrl = '';
+    const lines = block.split('\n');
+    if(lines[0] && lines[0].trim().startsWith('圖:')){
+      imageUrl = lines[0].trim().slice(2).trim();
+      block = lines.slice(1).join('\n').trim();
+    }
+    if(!block) return;
+    state.recyclePool.push({ id: 'r'+Date.now()+'_'+Math.random().toString(36).slice(2,7), content: block, imageUrl });
+    added++;
+  });
+  save();
+  document.getElementById('recycleArea').value = '';
+  renderRecyclePool();
+  showToast(added>0 ? `✅ 已加入回收區 ${added} 篇（尚未指派到任何一天）` : '沒有解析到任何內容');
+}
+function renderRecyclePool(){
+  const listEl = document.getElementById('recyclePoolList');
+  const countEl = document.getElementById('recycleCount');
+  if(!listEl) return;
+  countEl.textContent = state.recyclePool.length;
+  if(state.recyclePool.length===0){
+    listEl.innerHTML = '<div style="font-size:12.5px;color:var(--ink-3);padding:10px 2px;">回收區目前是空的，貼上舊文並按「解析加入回收區」試試看。</div>';
+    return;
+  }
+  listEl.innerHTML = state.recyclePool.map(item=>{
+    const preview = escapeHtml(item.content.slice(0,60).replace(/\n/g,' ')) + (item.content.length>60?'…':'');
+    const imgBadge = item.imageUrl ? `<span style="font-size:10.5px;color:var(--ink-3);">🖼 有圖</span>` : `<span style="font-size:10.5px;color:var(--ink-3);">無圖</span>`;
+    return `<div style="border:1.5px solid var(--border);border-radius:10px;padding:9px 10px;background:var(--paper-2);">
+      <div style="font-size:12.5px;color:var(--ink);line-height:1.6;margin-bottom:6px;">${preview}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        ${imgBadge}
+        <label style="font-size:11.5px;color:var(--ink-2);margin-left:auto;">指派到第
+          <input type="number" min="1" max="${TOTAL}" value="${nextEmptyDay()}" id="assignDay_${item.id}" style="width:48px;border:1.5px solid var(--border);border-radius:6px;background:var(--paper);padding:3px 5px;font-size:12px;color:var(--ink);outline:none;">
+        天</label>
+        <button class="btn primary" style="font-size:11px;padding:5px 9px;" onclick="assignRecycleItem('${item.id}')">指派</button>
+        <button class="btn ghost" style="font-size:11px;padding:5px 9px;" onclick="removeRecycleItem('${item.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function nextEmptyDay(){
+  for(let i=1;i<=TOTAL;i++){ if(!(state.posts[i].content && state.posts[i].content.trim())) return i; }
+  return 1;
+}
+function assignRecycleItem(id){
+  const item = state.recyclePool.find(x=>x.id===id);
+  if(!item) return;
+  const input = document.getElementById('assignDay_'+id);
+  let day = Number(input.value) || 0;
+  if(day<1 || day>TOTAL){ showToast('請輸入 1～30 之間的天數'); return; }
+  const existing = state.posts[day];
+  if(existing.content && existing.content.trim()){
+    showToast(`⚠️ 第 ${day} 天已經有內容了，不會覆蓋。請先清空那一天，或指派到別天。`);
+    return;
+  }
+  existing.content = item.content;
+  existing.imageUrl = item.imageUrl;
+  if(!existing.topic){ existing.topic = item.content.slice(0,16).replace(/\n/g,' '); }
+  state.recyclePool = state.recyclePool.filter(x=>x.id!==id);
+  save();
+  renderList();
+  renderRecyclePool();
+  selectDay(day);
+  showToast(`✅ 已指派到第 ${day} 天`);
+}
+function removeRecycleItem(id){
+  state.recyclePool = state.recyclePool.filter(x=>x.id!==id);
+  save();
+  renderRecyclePool();
+}
+function clearRecyclePool(){
+  if(state.recyclePool.length===0) return;
+  if(!confirm('確定要清空整個回收區暫存嗎？（還沒指派到任何一天的都會被刪除）')) return;
+  state.recyclePool = [];
+  save();
+  renderRecyclePool();
+  showToast('已清空回收區');
+}
+
+async function bulkDownloadImages(){
+  if(typeof JSZip === 'undefined' || typeof html2canvas === 'undefined'){
+    showToast('打包功能需要網路連線才能載入必要套件，請確認連上網路後再試一次');
+    return;
+  }
+  saveCurrentFromUI();
+  const btn = document.getElementById('bulkImgBtn');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ 產生中…（30天×4張，要一點時間）'; }
+  const stage = document.createElement('iframe');
+  stage.style.position = 'fixed'; stage.style.left = '-9999px'; stage.style.width = '1400px'; stage.style.height = '1400px';
+  document.body.appendChild(stage);
+  try{
+    const zip = new JSZip();
+    for(let day=1; day<=TOTAL; day++){
+      await new Promise((resolve, reject)=>{
+        stage.onload = resolve;
+        stage.onerror = reject;
+        stage.srcdoc = buildCardDocHTML(day, false);
       });
-    }
-
-    function restoreVersion(idx){
-      const p = state.posts[state.currentId];
-      if(!p) return;
-      const v = (p.versions || [])[idx];
-      if(!v) return;
-
-      const ok = confirm("確定復原到這個版本？目前內容會被覆蓋（但你仍可再從版本清單復原回來）。");
-      if(!ok) return;
-
-      p.title = v.title || p.title;
-      p.status = v.status || p.status;
-      p.settings = JSON.parse(JSON.stringify(v.settings || {}));
-      p.coverDataUrl = v.coverDataUrl || "";
-      p.markdown = v.markdown || "";
-      p.updatedAt = Date.now();
-
-      saveState();
-      loadPostToEditor(state.currentId);
-      renderPostList();
-      updateToc();
-      refreshSaveState("已復原");
-    }
-
-    function previewVersion(idx){
-      const p = state.posts[state.currentId];
-      if(!p) return;
-      const v = (p.versions || [])[idx];
-      if(!v) return;
-
-      document.getElementById("readerMask").style.display = "flex";
-      document.getElementById("readerStatus").textContent = "版本預覽";
-
-      document.getElementById("readerTitle").textContent = v.title || "（未命名）";
-      const meta = [
-        `版本：${new Date(v.ts).toLocaleString()}`,
-        `狀態：${v.status === "published" ? "已發佈" : "草稿"}`,
-        v.settings?.slug ? `Slug：${v.settings.slug}` : "",
-        v.settings?.tags ? `Tags：${v.settings.tags}` : "",
-        v.settings?.desc ? `摘要：${v.settings.desc}` : "",
-      ].filter(Boolean).join(" ｜ ");
-      document.getElementById("readerMeta").textContent = meta;
-
-      const coverWrap = document.getElementById("readerCover");
-      if(v.coverDataUrl){
-        coverWrap.style.display = "block";
-        coverWrap.innerHTML = `<img src="${v.coverDataUrl}" alt="cover">`;
-      }else{
-        coverWrap.style.display = "none";
-        coverWrap.innerHTML = "";
+      await new Promise(r=>setTimeout(r, 60));
+      const doc = stage.contentDocument;
+      const cardEls = doc.querySelectorAll('.ig-card');
+      const topic = (state.posts[day].topic || ('day'+day)).replace(/[\\/:*?"<>|]/g,'').slice(0,20) || ('day'+day);
+      for(let i=0;i<cardEls.length;i++){
+        const canvas = await html2canvas(cardEls[i], {scale:2, useCORS:true, backgroundColor:null, logging:false});
+        const blob = await new Promise(res=>canvas.toBlob(b=>res(b), 'image/jpeg', 0.92));
+        zip.file(`Day${String(day).padStart(2,'0')}_${topic}/${topic}${i+1}.jpg`, blob);
       }
-
-      if(editor){
-        const curMd = editor.getMarkdown();
-        editor.setMarkdown(v.markdown || "", false);
-        const html = editor.getHTML();
-        editor.setMarkdown(curMd, false);
-        editor.changeMode(state.ui.mode, true);
-        document.getElementById("readerContent").innerHTML = html;
-      }else{
-        document.getElementById("readerContent").textContent = (v.markdown || "");
-      }
+      if(btn) btn.textContent = `⏳ 產生中… Day ${day}/${TOTAL}`;
     }
+    const zipBlob = await zip.generateAsync({type:'blob'});
+    triggerDownload(zipBlob, 'kori_ig_cards_' + todayStr() + '.zip');
+    showToast('⬇️ 30天、120張圖卡已打包下載');
+  }catch(err){
+    console.error(err);
+    alert('打包失敗：' + err.message + '\n\n可以改成每篇分開用「下載本篇4張圖卡」試試。');
+  }finally{
+    document.body.removeChild(stage);
+    if(btn){ btn.disabled = false; btn.textContent = '🖼️ 全部圖卡（打包.zip）'; }
+  }
+}
+function updateCharCount(){
+  const len = document.getElementById('mainTa').value.length;
+  const pill = document.getElementById('charPill');
+  pill.textContent = len + ' 字';
+  pill.className = 'char-pill' + (len>500?' danger': len>400?' warn':'');
+}
 
-    function rollbackTo10Min(){
-      const p = state.posts[state.currentId];
-      if(!p) return;
+function trackSel(){
+  const ta = document.getElementById('mainTa');
+  lastSel = { s: ta.selectionStart, e: ta.selectionEnd };
+}
+function getInsertRange(){
+  const ta = document.getElementById('mainTa');
+  // 文字框目前有焦點時，用即時的游標位置；被工具列按鈕點掉焦點時，改用最後記住的位置
+  if(document.activeElement === ta){
+    return { s: ta.selectionStart, e: ta.selectionEnd };
+  }
+  const len = ta.value.length;
+  let s = Math.min(lastSel.s, len), e = Math.min(lastSel.e, len);
+  if(s < 0 || e < 0 || isNaN(s) || isNaN(e)){ s = len; e = len; }
+  return { s, e };
+}
+function insertText(str){
+  const ta = document.getElementById('mainTa');
+  const { s, e } = getInsertRange();
+  ta.focus();
+  ta.setSelectionRange(s, e);
+  ta.setRangeText(str, s, e, 'end');
+  lastSel = { s: s + str.length, e: s + str.length };
+  onEdit();
+}
+function wrapSel(open, close){
+  const ta = document.getElementById('mainTa');
+  const { s, e } = getInsertRange();
+  if(s===e){ insertText(open+close); return; }
+  ta.focus();
+  ta.setSelectionRange(s, e);
+  const sel = ta.value.substring(s,e);
+  ta.setRangeText(open+sel+close, s, e, 'end');
+  lastSel = { s: s, e: s + open.length + sel.length + close.length };
+  onEdit();
+}
+function insertBlock(type){
+  // Hashtag：插在目前游標位置。簽名檔一律走 insertSignature()，永遠固定在文章最後。
+  const ta = document.getElementById('mainTa');
+  const block = document.getElementById('tagInput').value.trim();
+  if(!block) return;
+  const { s, e } = getInsertRange();
+  ta.focus();
+  ta.setSelectionRange(s, e);
+  const glue = (s>0 && !/\n\n$/.test(ta.value.slice(0,s)) && ta.value.slice(0,s).trim()) ? '\n\n' : '';
+  ta.setRangeText(glue + block, s, e, 'end');
+  lastSel = { s: s + glue.length + block.length, e: s + glue.length + block.length };
+  onEdit();
+}
+function insertSignature(){
+  // 規則：簽名檔一律插在文章「最後」，不接受插在其他位置。若文章裡已經有一份，先移除舊的再補一份到最後，避免重複。
+  const ta = document.getElementById('mainTa');
+  const sig = document.getElementById('sigInput').value.trim();
+  if(!sig){ showToast('簽名檔內容是空的，先去「⚙️ 簽名檔／Hashtag」設定吧'); return; }
+  let text = ta.value;
+  if(text.includes(sig)){
+    text = text.split(sig).join('').replace(/\n{3,}/g,'\n\n').replace(/\s+$/,'');
+  }
+  const glue = (text.trim() && !text.endsWith('\n')) ? '\n\n' : '';
+  ta.value = text + glue + sig;
+  const end = ta.value.length;
+  ta.focus();
+  ta.setSelectionRange(end, end);
+  ta.scrollTop = ta.scrollHeight;
+  lastSel = { s: end, e: end };
+  onEdit();
+}
+function clearCurrent(){
+  if(!confirm('清空本篇內容？')) return;
+  document.getElementById('mainTa').value = '';
+  document.getElementById('topicInput').value = '';
+  onEdit();
+}
+function onEdit(){
+  saveCurrentFromUI();
+  updateCharCount();
+  renderList();
+}
 
-      const target = Date.now() - 10*60*1000;
-      const vs = (p.versions || []).slice().sort((a,b)=>b.ts-a.ts);
+function composeFull(day, forceSig){
+  const p = state.posts[day];
+  let text = (p.content||'').trim();
+  if(!text) return '';
+  const sig = document.getElementById('sigInput').value.trim();
+  const alreadyHasSig = sig && text.includes(sig.slice(0,6));
+  if(forceSig && sig && !alreadyHasSig){
+    text += '\n\n' + sig;
+  }
+  return text;
+}
 
-      const v = vs.find(x => x.ts <= target);
-      if(!v){
-        alert("找不到 10 分鐘前的版本（可能還沒累積到，或你剛開始寫）。你可以先手動建立版本。");
-        return;
-      }
+function copyToClipboard(text, msg){
+  navigator.clipboard.writeText(text).then(()=>showToast(msg||'📋 已複製')).catch(()=>{
+    prompt('請手動複製：', text);
+  });
+}
+function copyCurrent(){
+  saveCurrentFromUI();
+  const text = composeFull(current, document.getElementById('exportIncludeSig')?document.getElementById('exportIncludeSig').checked:true);
+  if(!text){ showToast('這篇還是空的喔'); return; }
+  copyToClipboard(text, `📋 Day ${current} 已複製`);
+}
+function copyDay(day){
+  selectDay(day);
+  copyCurrent();
+}
+function copyCurrentAndNext(){
+  copyCurrent();
+  setTimeout(()=>{ if(current<TOTAL) goDay(1); }, 250);
+}
 
-      const idx = (p.versions || []).findIndex(x => x.hash === v.hash);
-      if(idx >= 0) restoreVersion(idx);
-    }
-
-    // =============================
-    // Import/Export JSON
-    // =============================
-    function exportAllJson(){
-      const p = state.posts[state.currentId];
-      if(p && editor){
-        p.markdown = editor.getMarkdown();
-        p.updatedAt = Date.now();
-      }
-      saveState();
-      const data = JSON.stringify(state, null, 2);
-      downloadText(data, `blog_editor_backup_${new Date().toISOString().slice(0,10)}.json`, "application/json;charset=utf-8");
-    }
-
-    function importJsonFile(file){
-      const r = new FileReader();
-      r.onload = () => {
-        try{
-          const incoming = JSON.parse(String(r.result || "{}"));
-          if(!incoming || typeof incoming !== "object" || !incoming.posts){
-            alert("這份 JSON 格式不對，匯入失敗。");
-            return;
-          }
-
-          const mode = confirm("要用「合併」方式匯入嗎？\n\n確定 = 合併（保留你現有的文章）\n取消 = 覆蓋（用匯入資料取代你目前所有資料）");
-
-          if(mode){
-            mergeState(incoming);
-          }else{
-            localStorage.setItem(LS_KEY, JSON.stringify(incoming));
-          }
-
-          location.reload();
-        }catch(e){
-          alert("讀取 JSON 失敗，可能檔案壞掉或不是 JSON。");
-        }
-      };
-      r.readAsText(file, "utf-8");
-    }
-
-    function mergeState(incoming){
-      const merged = loadState();
-      merged.ui = merged.ui || state.ui;
-
-      const existIds = new Set(Object.keys(merged.posts || {}));
-      const incomingPosts = incoming.posts || {};
-
-      for(const [id, post] of Object.entries(incomingPosts)){
-        let newId = id;
-        while(existIds.has(newId)){
-          newId = newId + "_" + Math.random().toString(36).slice(2,6);
-        }
-        existIds.add(newId);
-        merged.posts[newId] = post;
-      }
-
-      merged.ui = state.ui;
-      const ids = Object.keys(merged.posts);
-      merged.currentId = ids.sort((a,b)=>(merged.posts[b].updatedAt||0)-(merged.posts[a].updatedAt||0))[0] || merged.currentId;
-
-      localStorage.setItem(LS_KEY, JSON.stringify(merged));
-    }
-
-    function downloadText(text, filename, mime){
-      const blob = new Blob([text], { type: mime });
+function copyAllDivided(){
+  saveCurrentFromUI();
+  const withSig = document.getElementById('exportIncludeSig').checked;
+  const parts = [];
+  for(let i=1;i<=TOTAL;i++){
+    const t = composeFull(i, withSig);
+    if(t) parts.push(t);
+  }
+  if(parts.length===0){ showToast('目前 30 篇都還是空的'); return; }
+  copyToClipboard(parts.join('\n\n---\n\n'), `📋 已複製 ${parts.length} 篇（用 --- 分隔）`);
+}
+function downloadTxt(){
+  saveCurrentFromUI();
+  const withSig = document.getElementById('exportIncludeSig').checked;
+  const parts = [];
+  for(let i=1;i<=TOTAL;i++){
+    const t = composeFull(i, withSig);
+    if(t) parts.push(t);
+  }
+  if(parts.length===0){ showToast('目前 30 篇都還是空的'); return; }
+  const blob = new Blob([parts.join('\n\n---\n\n')], {type:'text/plain;charset=utf-8'});
+  triggerDownload(blob, 'kori_buffer_batch_' + todayStr() + '.txt');
+  showToast('⬇️ .txt 已下載');
+}
+function downloadCsv(){
+  // 完全對齊 Buffer 官方 Bulk Upload Template 的 CSV 規格（使用者提供的 Buffer_Import_Template.csv 為準）：
+  // 固定 4 欄、欄名大小寫完全一致："Text","Image URL","Tags","Posting Time"，每一欄一律加雙引號（即使是空值）。
+  saveCurrentFromUI();
+  const withSig = document.getElementById('exportIncludeSig').checked;
+  let rows = [ ['Text','Image URL','Tags','Posting Time'] ];
+  let missingImage = 0;
+  let any = false;
+  for(let i=1;i<=TOTAL;i++){
+    const t = composeFull(i, withSig);
+    if(!t) continue;
+    any = true;
+    const img = (state.posts[i].imageUrl||'').trim();
+    if(!img) missingImage++;
+    rows.push([t, img, '', '']);
+  }
+  if(!any){ showToast('目前 30 篇都還是空的'); return; }
+  const csv = rows.map(r=>r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+  triggerDownload(blob, 'kori_buffer_bulk_upload_' + todayStr() + '.csv');
+  showToast(missingImage>0 ? `⬇️ .csv 已下載（有 ${missingImage} 篇還沒填圖片網址）` : '⬇️ .csv 已下載（符合 Buffer Bulk Upload 官方格式）');
+}
+function downloadCopyPaste(){
+  // 給「一篇篇手動複製貼上」用的版本：每篇前面標明 Day 幾，方便在檔案裡對照、逐篇選取複製。
+  saveCurrentFromUI();
+  const withSig = document.getElementById('exportIncludeSig').checked;
+  const parts = [];
+  for(let i=1;i<=TOTAL;i++){
+    const t = composeFull(i, withSig);
+    if(t) parts.push(`── Day ${i}　${state.posts[i].topic||''} ──\n\n${t}`);
+  }
+  if(parts.length===0){ showToast('目前 30 篇都還是空的'); return; }
+  const blob = new Blob([parts.join('\n\n\n')], {type:'text/plain;charset=utf-8'});
+  triggerDownload(blob, 'kori_buffer_copy_one_by_one_' + todayStr() + '.txt');
+  showToast('⬇️ 逐篇複製版已下載');
+}
+function csvEscape(v){
+  const s = String(v).replace(/"/g,'""');
+  return '"' + s + '"';
+}
+function triggerDownload(blob, filename){
+  try{
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 2000);
+  }catch(err){
+    console.error(err);
+    // 少數瀏覽器（或用 file:// 直接開檔時）擋掉自動下載，改用開新分頁的方式讓妳自己另存
+    try{
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      window.open(url, '_blank');
+      showToast('瀏覽器擋下自動下載，已在新分頁開啟，請用「另存新檔」儲存');
+    }catch(err2){
+      alert('下載失敗：' + err.message + '\n\n可以改用「一次複製全部」，貼到記事本後自己存檔。');
     }
+  }
+}
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function exportBackup(){
+  saveCurrentFromUI();
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  triggerDownload(blob, 'kori_buffer_batch_backup_' + todayStr() + '.json');
+  showToast('💾 備份已下載');
+}
 
-    // =============================
-    // UI bindings
-    // =============================
-    function bindUI(){
-      // tabs filter
-      document.querySelectorAll(".tab").forEach(tab => {
-        tab.addEventListener("click", () => {
-          document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-          tab.classList.add("active");
-          currentFilter = tab.dataset.filter || "all";
-          renderPostList();
-        });
-      });
+function openPromptModal(){
+  saveCurrentFromUI();
+  const topics = [];
+  for(let i=1;i<=TOTAL;i++){
+    const t = state.posts[i].topic;
+    topics.push(`Day ${i}: ${t && t.trim() ? t.trim() : '（未指定主題，請你自行挑選日語學習/教學相關主題，並和其他天避免重複）'}`);
+  }
+  const prompt = buildBatchPrompt(topics.join('\n'));
+  document.getElementById('promptOutput').value = prompt;
+  openModal('promptModal');
+}
+function buildBatchPrompt(topicsBlock){
+  return `你是「小狸日語」這個日語教學粉專的小編，請完全模仿下面這篇範文的語氣、用詞習慣、標點與排版風格，幫我生成 30 篇貼文內容。
 
-      // title sync
-      const titleInput = document.getElementById("titleInput");
-      titleInput.addEventListener("input", () => {
-        const p = state.posts[state.currentId];
-        if(!p) return;
-        p.title = titleInput.value;
-        p.updatedAt = Date.now();
-        saveState();
-        renderPostList();
-        refreshSaveState("已儲存");
-      });
+━━ 語氣範本（請嚴格模仿這篇的口吻、標點習慣、段落結構，但每篇用詞不要一模一樣，要自然變化）━━
+${TONE_SAMPLE}
 
-      // ✅ 公開頁 + 複製連結
-      document.getElementById("btnOpenPublic").addEventListener("click", goPublicOfCurrent);
-      document.getElementById("btnCopyPublic").addEventListener("click", copyPublicOfCurrent);
-      document.getElementById("btnBackToEdit").addEventListener("click", () => { location.hash = "#/edit"; });
-      document.getElementById("btnCopyPublicTop").addEventListener("click", () => {
-        const h = location.hash || "";
-        if(!h.startsWith("#/p/")) return;
-        copyText(location.href, "已複製公開連結");
-      });
+━━ 開頭固定格式（每一篇都必須用這句當第一行，不能省略或改寫）━━
+朋友們好，今天來跟小狸老師學〇〇〜
+（把〇〇換成這篇的主題／關鍵字本身，其餘一字不改）
 
-      // new / delete
-      document.getElementById("btnNew").addEventListener("click", () => {
-        const id = newId();
-        state.posts[id] = {
-          title: "未命名文章",
-          status: "draft",
-          markdown: "",
-          settings: { slug:"", tags:"", desc:"" },
-          coverDataUrl: "",
-          updatedAt: Date.now(),
-          versions: [],
-          lastAutoVerAt: 0,
-          lastAutoHash: ""
-        };
-        state.currentId = id;
-        saveState();
-        location.hash = "#/edit";
-        renderPostList();
-        loadPostToEditor(id);
-        updateToc();
-      });
+━━ 語氣重點 ━━
+- 關鍵字/重點用【】標出，需要標假名的漢字用「漢字(かな)」格式
+- 括號說明用全形空格縮排，語氣輕鬆口語
+- 適時使用「～～～」「喔！」等語尾製造親切感，但不要每句都用，抓自然的頻率
+- 例句、延伸等段落用小標題分段（例如「例句」「延伸」），標題不要加任何符號
+- 不要有「這個字非常實用」「學會這個字能讓你」這類 AI 制式讚美句
+- 完全不要放簽名檔或推廣資訊，那部分我會自己另外加
 
-      document.getElementById("btnDelete").addEventListener("click", () => {
-        const ids = Object.keys(state.posts);
-        if(ids.length <= 1){
-          alert("至少要保留 1 篇文章喔！");
-          return;
-        }
-        const cur = state.posts[state.currentId];
-        const ok = confirm(`確定要刪除「${cur?.title || "未命名"}」？（無法復原）`);
-        if(!ok) return;
+━━ 排版：句子間距要拉大 ━━
+- 每一句日文例句跟它的中文翻譯之間，中間空一行（用一個完全空白的段落隔開），不要日文和中文黏在一起
+- 每一組例句（日文＋翻譯）跟下一組例句之間，也用空行隔開，讓整篇讀起來有呼吸感、不要擠成一團
+- 「意思說明」「例句」「延伸」這幾個區塊之間，也都用空行分隔
 
-        delete state.posts[state.currentId];
-        const nextId = Object.keys(state.posts)
-          .sort((a,b)=>(state.posts[b].updatedAt||0)-(state.posts[a].updatedAt||0))[0];
-        state.currentId = nextId;
-        saveState();
-        renderPostList();
-        loadPostToEditor(nextId);
-        updateToc();
-      });
+━━ 隨機項目符號（emoji）━━
+- 【】關鍵字那一行、「例句」「延伸」這些小標題前面，隨機加一個項目符號 emoji（不要每篇都用同一個，要輪流換，讓每篇看起來不完全一樣）
+- 可以從這個池子裡隨機挑：✨ 🔹 📌 🌸 🍀 ☀️ 🌙 🎯 🧩 💬 🔖 🌿
+- 同一篇裡不要重複用同一個符號超過兩次
 
-      // status toggle
-      document.getElementById("btnToggleStatus").addEventListener("click", () => {
-        const p = state.posts[state.currentId];
-        if(!p) return;
-        p.status = (p.status === "published") ? "draft" : "published";
-        p.updatedAt = Date.now();
-        saveState();
-        syncStatusButton();
-        renderPostList();
-        refreshSaveState("已儲存");
-      });
+━━ 30 天主題安排 ━━
+${topicsBlock}
 
-      // font/size
-      document.getElementById("fontSelect").addEventListener("change", (e) => {
-        state.ui.fontFamily = e.target.value;
-        saveState();
-        applyUiVars();
-      });
-      document.getElementById("btnSmaller").addEventListener("click", () => setFontSize(state.ui.fontSize - 1));
-      document.getElementById("btnBigger").addEventListener("click", () => setFontSize(state.ui.fontSize + 1));
+━━ IG 圖卡欄位（cards，每一天都要）━━
+除了貼文正文，還要幫每一天額外準備 4 張 IG 圖卡的素材，放在 cards 陣列裡，依序是：
+cards[0] 封面卡 → title=分類標籤（例：慣用句/ことわざ/四字熟語）, main=關鍵字本身（漢字需要標假名時用「漢字(かな)」格式）, note=一句話中文意思
+cards[1] 基礎例句卡 → title="基礎例句", main=最簡短、最基礎的日文例句（加假名標註，10字以內), note=中文翻譯（不加括號）
+cards[2] 進階例句卡 → title="進階例句", main=情境更豐富、中等難度的日文例句（加假名標註，15字左右）, note=中文翻譯
+cards[3] 實戰例句卡 → title="實戰例句", main=最接近母語者說法、可以有轉折或補充語氣的日文例句（加假名標註，20～30字）, note=中文翻譯
+三張例句卡的長度與難度要明顯遞增：短→中→長，不能三句都差不多長。
 
-      // mode
-      document.getElementById("btnMode").addEventListener("click", () => {
-        if(!editor) return;
-        const next = editor.isMarkdownMode() ? "wysiwyg" : "markdown";
-        state.ui.mode = next;
-        saveState();
-        editor.changeMode(next, false);
-        setModeButtonText();
-      });
+━━ 輸出格式 ━━
+純 JSON 陣列，直接以 [ 開頭、以 ] 結尾，不要有 markdown 符號或任何其他文字。每個元素包含：
+day     → 數字（1～30）
+topic   → 這篇的主題／關鍵字（字串）
+content → 貼文正文（字串，依照上面語氣範本風格撰寫，不含簽名檔與hashtag）
+cards   → 上面說明的 4 個元素陣列，每個元素是 {title, main, note}
 
-      // theme toggle (re-mount)
-      document.getElementById("btnTheme").addEventListener("click", () => {
-        if(!editor) return;
-        const md = editor.getMarkdown();
-        state.ui.mode = editor.isMarkdownMode() ? "markdown" : "wysiwyg";
+現在請輸出 JSON：`;
+}
+function copyPrompt(){
+  copyToClipboard(document.getElementById('promptOutput').value, '📋 Prompt 已複製，貼給 AI 吧');
+}
 
-        state.ui.theme = (state.ui.theme === "dark") ? "light" : "dark";
-        saveState();
-        applyUiVars();
+function doImport(){
+  const raw = document.getElementById('importArea').value.trim();
+  if(!raw){ showToast('請先貼上內容'); return; }
+  let clean = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+  const start = clean.indexOf('['), end = clean.lastIndexOf(']');
+  if(start>=0 && end>=0) clean = clean.substring(start, end+1);
+  let parsed;
+  try{ parsed = JSON.parse(clean); }
+  catch(e){ showToast('JSON 解析失敗：' + e.message); return; }
+  if(!Array.isArray(parsed)){ showToast('格式不是陣列，請確認 AI 回傳內容'); return; }
+  let count = 0;
+  parsed.forEach((item, idx)=>{
+    const day = Number(item.day) || (idx+1);
+    if(day<1 || day>TOTAL) return;
+    if(!state.posts[day]) state.posts[day] = blankPost(day);
+    if(item.topic) state.posts[day].topic = String(item.topic);
+    if(item.content) state.posts[day].content = String(item.content);
+    if(item.cards) state.posts[day].cards = normalizeCards(item.cards);
+    if(state.posts[day].themeIdx===undefined || state.posts[day].themeIdx===null) state.posts[day].themeIdx = Math.floor(Math.random()*THEMES.length);
+    count++;
+  });
+  save();
+  selectDay(current);
+  closeModal('importModal');
+  showToast(`✅ 已匯入 ${count} 篇`);
+}
+function normalizeCards(cards){
+  const src = Array.isArray(cards) ? cards.slice(0,4) : [];
+  const out = src.map(c=>({ title: String((c&&c.title)||''), main: String((c&&c.main)||''), note: String((c&&c.note)||'') }));
+  while(out.length<4) out.push({title:'',main:'',note:''});
+  return out;
+}
 
-        mountEditor(state.ui.theme);
-        editor.setMarkdown(md, false);
-        editor.changeMode(state.ui.mode, true);
-        setModeButtonText();
-        updateToc();
+function escapeHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
-        // 如果正在公開頁，也會跟著換主題
-        handleRoute();
-      });
-
-      // reading
-      document.getElementById("btnReading").addEventListener("click", () => {
-        document.getElementById("readerMask").style.display = "flex";
-        refreshReaderContent();
-      });
-      document.getElementById("btnCloseReader").addEventListener("click", () => {
-        document.getElementById("readerMask").style.display = "none";
-      });
-      document.getElementById("btnRefreshReader").addEventListener("click", () => {
-        document.getElementById("readerStatus").textContent = "更新中…";
-        refreshReaderContent();
-      });
-
-      // settings drawer
-      document.getElementById("btnSettings").addEventListener("click", openDrawer);
-      document.getElementById("btnCloseDrawer").addEventListener("click", closeDrawer);
-      document.getElementById("drawerMask").addEventListener("click", (e) => {
-        if(e.target.id === "drawerMask") closeDrawer();
-      });
-      document.getElementById("btnSaveSettings").addEventListener("click", saveSettings);
-
-      // cover box
-      const coverBox = document.getElementById("coverBox");
-      const coverInput = document.getElementById("coverInput");
-
-      document.getElementById("btnPickCover").addEventListener("click", () => coverInput.click());
-      coverBox.addEventListener("click", (e) => {
-        if(e.target && e.target.tagName === "BUTTON") return;
-        coverInput.click();
-      });
-
-      coverInput.addEventListener("change", async () => {
-        const file = coverInput.files && coverInput.files[0];
-        if(!file) return;
-        const dataUrl = await loadImageFromFile(file);
-        await setCoverDataUrl(dataUrl);
-        coverInput.value = "";
-      });
-
-      document.getElementById("btnRemoveCover").addEventListener("click", async (e) => {
-        e.stopPropagation();
-        await setCoverDataUrl("");
-      });
-
-      ["dragenter","dragover"].forEach(evt => {
-        coverBox.addEventListener(evt, (e) => {
-          e.preventDefault();
-          coverBox.classList.add("drag");
-        });
-      });
-      ["dragleave","drop"].forEach(evt => {
-        coverBox.addEventListener(evt, (e) => {
-          e.preventDefault();
-          coverBox.classList.remove("drag");
-        });
-      });
-      coverBox.addEventListener("drop", async (e) => {
-        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if(!file) return;
-        const dataUrl = await loadImageFromFile(file);
-        await setCoverDataUrl(dataUrl);
-      });
-
-      coverBox.addEventListener("paste", async (e) => {
-        const items = e.clipboardData && e.clipboardData.items;
-        if(!items) return;
-        for(const it of items){
-          if(it.type && it.type.startsWith("image/")){
-            const file = it.getAsFile();
-            if(file){
-              const dataUrl = await loadImageFromFile(file);
-              await setCoverDataUrl(dataUrl);
-              e.preventDefault();
-              break;
-            }
-          }
-        }
-      });
-
-      // Share overlay
-      document.getElementById("btnShare").addEventListener("click", () => {
-        document.getElementById("shareMask").style.display = "flex";
-      });
-      document.getElementById("btnCloseShare").addEventListener("click", () => {
-        document.getElementById("shareMask").style.display = "none";
-      });
-      document.getElementById("btnBuildShare").addEventListener("click", async () => {
-        const url = await buildShare("1200x630");
-        if(!url) return;
-        showSharePreview(url);
-      });
-
-      function showSharePreview(dataUrl){
-        const img = document.getElementById("shareImg");
-        const empty = document.getElementById("shareEmpty");
-        img.src = dataUrl;
-        img.style.display = "block";
-        empty.style.display = "none";
-      }
-
-      async function downloadShare(size){
-        const url = await buildShare(size);
-        if(!url) return;
-        showSharePreview(url);
-        downloadDataUrl(url, `share_${size}_${safeFileName(state.posts[state.currentId]?.title || "untitled")}.png`);
-      }
-
-      document.getElementById("btnDl1").addEventListener("click", () => downloadShare("1200x630"));
-      document.getElementById("btnDl2").addEventListener("click", () => downloadShare("1080x1080"));
-      document.getElementById("btnDl3").addEventListener("click", () => downloadShare("1080x1350"));
-
-      // Versions overlay
-      document.getElementById("btnVersions").addEventListener("click", () => {
-        document.getElementById("verMask").style.display = "flex";
-        renderVersions();
-      });
-      document.getElementById("btnCloseVer").addEventListener("click", () => {
-        document.getElementById("verMask").style.display = "none";
-      });
-      document.getElementById("btnSaveVer").addEventListener("click", () => {
-        const p = state.posts[state.currentId];
-        if(!p) return;
-        pushVersion(p, {note:"manual"});
-        p.updatedAt = Date.now();
-        saveState();
-        renderVersions();
-        refreshSaveState("已儲存版本");
-      });
-      document.getElementById("btnRollback10").addEventListener("click", rollbackTo10Min);
-
-      // Commands overlay
-      document.getElementById("btnCmds").addEventListener("click", () => {
-        document.getElementById("cmdMask").style.display = "flex";
-      });
-      document.getElementById("btnCloseCmd").addEventListener("click", () => {
-        document.getElementById("cmdMask").style.display = "none";
-      });
-      document.getElementById("btnInsertHelp").addEventListener("click", () => {
-        if(!editor) return;
-        editor.insertText(buildHelpBlock());
-        document.getElementById("cmdMask").style.display = "none";
-        scheduleAutoSave();
-      });
-
-      // Export / Import JSON
-      document.getElementById("btnExportJson").addEventListener("click", exportAllJson);
-      document.getElementById("btnImportJson").addEventListener("click", () => {
-        document.getElementById("jsonInput").click();
-      });
-      document.getElementById("jsonInput").addEventListener("change", () => {
-        const f = document.getElementById("jsonInput").files && document.getElementById("jsonInput").files[0];
-        if(f) importJsonFile(f);
-        document.getElementById("jsonInput").value = "";
-      });
-    }
-
-    function setFontSize(n){
-      const next = Math.max(12, Math.min(24, Number(n)));
-      state.ui.fontSize = next;
-      saveState();
-      applyUiVars();
-    }
-
-    function setModeButtonText(){
-      const b = document.getElementById("btnMode");
-      if(!editor){ b.textContent = "Markdown"; return; }
-      b.textContent = editor.isMarkdownMode() ? "Markdown" : "WYSIWYG";
-    }
-
-    // Drawer open/close/save
-    function openDrawer(){
-      const p = state.posts[state.currentId];
-      if(p){
-        document.getElementById("settingSlug").value = (p.settings?.slug || "");
-        document.getElementById("settingTags").value = (p.settings?.tags || "");
-        document.getElementById("settingDesc").value = (p.settings?.desc || "");
-        syncCoverPreview();
-      }
-      document.getElementById("drawerMask").style.display = "flex";
-    }
-
-    function closeDrawer(){
-      document.getElementById("drawerMask").style.display = "none";
-    }
-
-    function saveSettings(){
-      const p = state.posts[state.currentId];
-      if(!p) return;
-
-      p.settings = p.settings || {};
-      p.settings.slug = document.getElementById("settingSlug").value.trim();
-      p.settings.tags = document.getElementById("settingTags").value.trim();
-      p.settings.desc = document.getElementById("settingDesc").value.trim();
-      p.updatedAt = Date.now();
-
-      saveState();
-      closeDrawer();
-      refreshSaveState("已儲存");
-    }
-
-    // =============================
-    // Utilities
-    // =============================
-    function refreshSaveState(text){
-      document.getElementById("saveState").textContent = text;
-    }
-
-    function escapeHtml(s){
-      return String(s).replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[m]));
-    }
-
-    function safeFileName(s){
-      return String(s).trim().replace(/[\\/:*?"<>|]+/g, "_").slice(0, 60) || "untitled";
-    }
-
-    function debounce(fn, wait){
-      let t = null;
-      return (...args) => {
-        clearTimeout(t);
-        t = setTimeout(() => fn(...args), wait);
-      };
-    }
-
-    function downloadDataUrl(dataUrl, filename){
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-  </script>
-</body>
-</html>
+function init(){
+  load();
+  renderEmojis();
+  document.getElementById('sigInput').value = state.sig;
+  document.getElementById('tagInput').value = state.tags;
+  document.getElementById('sigInput').addEventListener('input', ()=>{ state.sig = document.getElementById('sigInput').value; save(); });
+  document.getElementById('tagInput').addEventListener('input', ()=>{ state.tags = document.getElementById('tagInput').value; save(); });
+  document.getElementById('wpSiteInput').value = state.wp.site;
+  document.getElementById('wpUserInput').value = state.wp.user;
+  document.getElementById('wpPassInput').value = state.wp.appPass;
+  document.getElementById('wpSiteInput').addEventListener('input', ()=>{ state.wp.site = document.getElementById('wpSiteInput').value.trim(); save(); });
+  document.getElementById('wpUserInput').addEventListener('input', ()=>{ state.wp.user = document.getElementById('wpUserInput').value.trim(); save(); });
+  document.getElementById('wpPassInput').addEventListener('input', ()=>{ state.wp.appPass = document.getElementById('wpPassInput').value.trim(); save(); });
+  document.getElementById('mainTa').addEventListener('input', onEdit);
+  document.getElementById('mainTa').addEventListener('keyup', trackSel);
+  document.getElementById('mainTa').addEventListener('click', trackSel);
+  document.getElementById('mainTa').addEventListener('select', trackSel);
+  document.getElementById('topicInput').addEventListener('input', onEdit);
+  document.getElementById('imageUrlInput').addEventListener('input', ()=>{ state.posts[current].imageUrl = document.getElementById('imageUrlInput').value.trim(); save(); });
+  selectDay(1);
+  renderList();
+}
+init();
+</script>
