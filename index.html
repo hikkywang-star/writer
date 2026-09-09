@@ -261,7 +261,7 @@ textarea.modal-ta:focus{border-color:var(--primary);}
     <div class="brand">
       <span class="mark">🦝</span>
       <div>
-        <h1>三十日貼文工坊</h1>
+        <h1>三十日貼文工坊 <span style="font-size:11px;font-weight:800;color:var(--ink-3);background:var(--paper-2);border:1.5px solid var(--border);border-radius:6px;padding:2px 7px;vertical-align:middle;margin-left:4px;">V1</span></h1>
         <div class="sub">小狸日語・Buffer 批次排程準備室</div>
       </div>
     </div>
@@ -338,7 +338,6 @@ textarea.modal-ta:focus{border-color:var(--primary);}
         <button class="tb-btn" onclick="insertSignature()">⬇️ 插入簽名檔（固定放最後）</button>
         <button class="tb-btn" onclick="insertBlock('tag')"># 插入 Hashtag</button>
         <button class="tb-btn" onclick="applyOpeningLineToCurrent()">👋 加上開頭第一句</button>
-        <button class="tb-btn" onclick="applyAutoFuriganaToCurrent()">🔤 幫本篇加注音（實驗性）</button>
         <button class="tb-btn" onclick="applyEmojiToCurrent()">✨ 幫本篇加上emoji符號</button>
         <button class="tb-btn" onclick="applyEmojiToAll()">✨ 一鍵幫全部30天加上emoji</button>
         <button class="tb-btn" onclick="clearCurrent()" style="color:var(--danger);">🗑️ 清空本篇</button>
@@ -361,6 +360,8 @@ textarea.modal-ta:focus{border-color:var(--primary);}
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <select id="themeSelect" onchange="onThemeSelectChange()" style="border:1.5px solid var(--border-2);background:var(--paper-2);color:var(--ink);border-radius:9px;padding:6px 10px;font-size:12px;font-weight:700;"></select>
             <button class="btn ghost" onclick="randomizeTheme()">🎲 換底色</button>
+            <button class="btn ghost" onclick="applyAutoFuriganaToCurrent()">🔤 幫本篇加注音（實驗性）</button>
+            <button class="btn ghost" onclick="repairFuriganaOnCurrent()" style="color:var(--danger);">🧹 清除中文誤加的注音</button>
             <button class="btn ghost" onclick="autoFillCardsFromContent(current)">🪄 用本篇文字產生圖卡DEFAULT內容</button>
             <button class="btn ghost" onclick="autoFillCardsForAll()">🪄 一鍵幫全部30天產生圖卡內容</button>
             <button class="btn primary" onclick="downloadDayCards(current)">⬇️ 下載本篇4張圖卡</button>
@@ -744,47 +745,108 @@ function isLikelyJapaneseSegment(s){
   if(kanjiCount===0) return kanaCount>0;
   return kanaCount / (kanaCount+kanjiCount) >= 0.28;
 }
+function processJapaneseChunk(seg, tokenizer){
+  // 對一小段文字判斷是不是日文；是的話整段標讀音，偏中文的話只處理裡面用「」夾住的日文片段
+  if(!/[一-龯々ヶ]/.test(seg)) return seg;
+  if(isLikelyJapaneseSegment(seg)){
+    const tokens = tokenizer.tokenize(seg);
+    return tokens.map(t => furiganaForToken(t.surface_form, t.reading)).join('');
+  }
+  if(/「[^」]*」/.test(seg)){
+    return seg.replace(/「([^」]*)」/g, (whole, inner) => {
+      if(!isLikelyJapaneseSegment(inner)) return whole;
+      const tokens = tokenizer.tokenize(inner);
+      return '「' + tokens.map(t => furiganaForToken(t.surface_form, t.reading)).join('') + '」';
+    });
+  }
+  return seg;
+}
 function autoFuriganaLine(line, tokenizer){
   const trimmed = line.trim();
   if(!trimmed) return line;
   const leading = line.match(/^\s*/)[0];
-  if(/[（(]/.test(trimmed)) return line; // 已經有括號標音，跳過避免重複疊加
   if(!/[一-龯々ヶ]/.test(trimmed)) return line; // 沒有漢字，不用處理
 
-  if(isLikelyJapaneseSegment(trimmed)){
-    // 整行看起來就是日文句子，整行處理
-    const tokens = tokenizer.tokenize(trimmed);
-    return leading + tokens.map(t => furiganaForToken(t.surface_form, t.reading)).join('');
-  }
-
-  // 整行判斷起來偏中文，但如果中文裡用「」夾了一小段日文（例如中文解釋句裡引用了一句日文），
-  // 只把引號裡面那段當日文處理，引號外的中文完全不動，避免中文被誤標注音
-  if(/「[^」]*」/.test(trimmed)){
-    const rebuilt = trimmed.replace(/「([^」]*)」/g, (whole, inner) => {
-      if(!isLikelyJapaneseSegment(inner)) return whole;
-      const tokens = tokenizer.tokenize(inner);
-      const converted = tokens.map(t => furiganaForToken(t.surface_form, t.reading)).join('');
-      return '「' + converted + '」';
-    });
+  // 這一行如果只有「部分」漢字已經手動標過讀音（例如妳自己先加了「顔(かお)」），
+  // 不要整行直接放棄不處理——把已經標好的部分保護起來原封不動，其餘還沒標的部分照樣自動注音
+  if(/[（(]/.test(trimmed)){
+    const alreadyAnnotatedRe = /[一-龯々ヶ]+[（(][ぁ-んァ-ヶー]+[）)]/g;
+    let segments = [];
+    let lastIndex = 0, m;
+    while((m = alreadyAnnotatedRe.exec(trimmed))){
+      if(m.index > lastIndex) segments.push({text: trimmed.slice(lastIndex, m.index), protected:false});
+      segments.push({text: m[0], protected:true});
+      lastIndex = alreadyAnnotatedRe.lastIndex;
+    }
+    if(lastIndex < trimmed.length) segments.push({text: trimmed.slice(lastIndex), protected:false});
+    const rebuilt = segments.map(s => s.protected ? s.text : processJapaneseChunk(s.text, tokenizer)).join('');
     return leading + rebuilt;
   }
 
-  return line; // 判斷是中文，整行跳過
+  return leading + processJapaneseChunk(trimmed, tokenizer);
 }
 function autoFuriganaText(text, tokenizer){
   return String(text||'').split('\n').map(l => autoFuriganaLine(l, tokenizer)).join('\n');
 }
-function applyAutoFuriganaToCurrent(){
+/* ===== 修正：把之前不小心誤加在中文上的注音括號拿掉（只清中文，日文的括號注音不會動） ===== */
+function stripFuriganaFromSegment(seg){
+  return seg.replace(/([一-龯々ヶ]+)[（(]([ぁ-んァ-ヶー]+)[）)]/g, '$1');
+}
+function repairMisplacedFuriganaLine(line){
+  if(!/[（(][ぁ-んァ-ヶー]+[）)]/.test(line)) return line; // 這行根本沒有括號注音，不用處理
+  const parts = line.split(/(「[^」]*」)/); // 引號內外分開判斷，各自決定要不要保留注音
+  return parts.map(part=>{
+    const isQuoted = part.length>=2 && part.startsWith('「') && part.endsWith('」');
+    const inner = isQuoted ? part.slice(1,-1) : part;
+    const deannotated = stripFuriganaFromSegment(inner); // 先假設拿掉注音，看剩下的本文像不像日文
+    const looksJapanese = isLikelyJapaneseSegment(deannotated);
+    const result = looksJapanese ? inner : deannotated; // 像日文就保留原本的注音；不像就拿掉
+    return isQuoted ? '「' + result + '」' : result;
+  }).join('');
+}
+function repairMisplacedFuriganaText(text){
+  return String(text||'').split('\n').map(repairMisplacedFuriganaLine).join('\n');
+}
+function repairFuriganaOnCurrent(){
   saveCurrentFromUI();
   const p = state.posts[current];
   if(!p.content || !p.content.trim()){ showToast('這一天還沒有內容'); return; }
+  const before = p.content;
+  p.content = repairMisplacedFuriganaText(p.content);
+  document.getElementById('mainTa').value = p.content;
+  // 圖卡的4個main欄位（例句）如果也有被誤加，一起清乾淨
+  let cardsChanged = false;
+  if(p.cards && p.cards.length===4){
+    p.cards.forEach(c=>{
+      const cleaned = repairMisplacedFuriganaText(c.main||'');
+      if(cleaned !== c.main){ c.main = cleaned; cardsChanged = true; }
+    });
+  }
+  save();
+  updateCharCount();
+  if(cardsChanged){ renderCardEditors(current); renderCardsPreview(current); }
+  showToast((before===p.content && !cardsChanged) ? '這一篇沒有偵測到誤加在中文上的注音' : '🧹 已清除誤加在中文上的注音括號，日文的注音沒有動到');
+}
+function applyAutoFuriganaToCurrent(){
+  saveCurrentFromUI();
+  ensureCards(current);
+  const p = state.posts[current];
+  const hasContent = p.content && p.content.trim();
+  const hasCardText = p.cards.some(c => c.main && c.main.trim());
+  if(!hasContent && !hasCardText){ showToast('這一天的內文跟圖卡都還是空的，先寫一點文字再加注音'); return; }
   showToast('🔤 注音字典載入中，第一次使用會花幾秒鐘…');
   ensureKuromoji().then(tokenizer=>{
-    p.content = autoFuriganaText(p.content, tokenizer);
-    document.getElementById('mainTa').value = p.content;
+    // 上面的內文、跟下面4張圖卡的例句欄位，一起加注音（很多人是直接在圖卡欄位打字，不一定會填上面的內文）
+    if(hasContent){
+      p.content = autoFuriganaText(p.content, tokenizer);
+      document.getElementById('mainTa').value = p.content;
+    }
+    p.cards.forEach(c => { if(c.main && c.main.trim()) c.main = autoFuriganaText(c.main, tokenizer); });
     save();
     updateCharCount();
-    showToast('🔤 已自動加上注音，是自動判斷的結果，請務必檢查一下有沒有讀音判斷錯誤的地方');
+    renderCardEditors(current);
+    renderCardsPreview(current);
+    showToast('🔤 已自動加上注音（內文＋4張圖卡都處理了），是自動判斷的結果，請務必檢查一下有沒有讀音判斷錯誤的地方');
   }).catch(err=>{
     console.error(err);
     showToast('⚠️ 自動注音失敗（' + err.message + '），可能是網路連不到字典檔，請改成手動用「漢字(かな)」格式標註');
@@ -912,7 +974,7 @@ function computeCardsFromContent(day){
       if(m) definition = m[1];
       break;
     }
-    if(definition.length>60) definition = definition.slice(0,58) + '…';
+    if(definition.length>40) definition = definition.slice(0,38) + '…';
   }
 
   // 例句：抓看起來像日文例句（含假名/漢字、以。或！結尾）的行，最多取3句；下一行若像中文翻譯就一起帶走
@@ -933,14 +995,16 @@ function computeCardsFromContent(day){
     if(jpRe.test(l) && /[。！]$/.test(l) && !/^[（(]/.test(l)){
       const sentences = splitSentences(l);
       const next = lines[i+1] || '';
-      const nextIsTranslation = next && !jpRe.test(next.replace(/[（）()]/g,''));
+      // 判斷下一行是不是中文翻譯：不能只看「有沒有CJK字」，因為中文漢字跟日文漢字是同一段Unicode，
+      // 一定要看有沒有假名（ひらがな／カタカナ）才準——中文完全沒有假名，日文句子通常會有
+      const nextIsTranslation = next && !/[ぁ-んァ-ヶー]/.test(next.replace(/[（）()]/g,''));
       let noteText = '';
       if(nextIsTranslation){
         const noteSentences = splitSentences(next.replace(/^[（(]|[）)]$/g,''));
         noteText = (noteSentences.length===sentences.length) ? formatExampleGroup(noteSentences) : next.replace(/^[（(]|[）)]$/g,'');
       }
       // 翻譯太長容易在圖卡裡爆版、蓋到logo，超過一定長度就截斷加刪節號
-      if(noteText.length>60) noteText = noteText.slice(0,58) + '…';
+      if(noteText.length>40) noteText = noteText.slice(0,38) + '…';
       examples.push({ main: formatExampleGroup(sentences), note: noteText });
       if(nextIsTranslation) i++;
     }
@@ -950,7 +1014,9 @@ function computeCardsFromContent(day){
   const labels = ['基礎例句','進階例句','實戰例句'];
   for(let k=0;k<3;k++){
     if(examples[k]){
-      p.cards[k+1] = { title: p.cards[k+1].title || labels[k], main: examples[k].main, note: examples[k].note || p.cards[k+1].note };
+      // 「進階例句」那張比較特別：中文小字不放例句翻譯，改放這個字／慣用句本身的中文簡短解釋（跟封面卡是同一句）
+      const noteForThisCard = (k===1) ? (definition || examples[k].note || p.cards[k+1].note) : (examples[k].note || p.cards[k+1].note);
+      p.cards[k+1] = { title: p.cards[k+1].title || labels[k], main: examples[k].main, note: noteForThisCard };
     }
   }
   return true;
@@ -1006,7 +1072,7 @@ function onThemeSelectChange(){
 }
 
 function generateCardCSS(theme){
-  return '@import url(\'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap\');:root { --primary:'+theme.primary+'; --accent:'+theme.accent+'; --card-bg:'+theme.cardBg+'; --inner-bg:#fdfbf6; --shadow-color:rgba(0,0,0,0.2); --text:#3a3226; --paper-border:#eaddc5; }*{box-sizing:border-box}html,body{margin:0;padding:0;font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;font-weight:400;color:#334155;background:#f8fafc;}.kotanuki-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;padding:16px;justify-items:center;}.ig-card{container-type:inline-size;width:100%;max-width:300px;aspect-ratio:1/1;border-radius:8px;background-color:var(--card-bg);background-image:'+getSvgUrl(theme.svg, theme.primary)+';background-size:'+theme.size+';background-position:center;background-repeat:repeat;border:8px solid #f7f2e6;box-shadow:2px 4px 12px var(--shadow-color);display:flex;flex-direction:column;overflow:hidden;position:relative;margin:0 auto}.card-header{padding:4cqi 5cqi 0 5cqi;display:flex;align-items:center;flex-shrink:0;z-index:2;gap:3cqi}.header-badge{background:var(--primary);color:#fff;font-weight:600;font-size:5cqi;width:9cqi;height:9cqi;border-radius:4px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.15);flex-shrink:0;}.header-title{font-size:4.5cqi;font-weight:600;color:var(--primary);background:#fff;padding:1.5cqi 3.5cqi;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.08);white-space:nowrap;letter-spacing:0.05em;}.card-body{flex-grow:1;display:flex;flex-direction:column;justify-content:center;padding:1cqi 5cqi 10cqi 5cqi;z-index:2;position:relative;overflow:hidden;max-height:100%;}.text-bg{background:var(--inner-bg);padding:5cqi 5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);position:relative;text-align:center;width:96%;max-width:100%;max-height:78cqi;margin:0 auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box !important; word-break:normal !important; overflow-wrap:break-word !important; overflow:hidden;}.fa-icon{font-size:8cqi;display:block;margin:0 auto 2cqi auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1));opacity:0.9;}.text-primary{color:var(--primary)} .text-accent{color:var(--accent)}.main-text{font-size:7.8cqi;font-weight:500;color:var(--text);line-height:2.05;margin-bottom:2cqi;letter-spacing:0.02em;word-break:normal !important; overflow-wrap:break-word !important;}.example-line{margin-bottom:2.2cqi;}.example-badge{display:inline-block;font-size:0.62em;font-weight:700;color:var(--accent);margin-right:0.3em;}.note-box{margin-top:3cqi;line-height:1.4;color:#594d3c;font-weight:400;text-align:justify;font-size:4.4cqi;padding:0 2cqi;position:relative;z-index:2;max-height:19cqi;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;text-overflow:ellipsis;}ruby{font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;}rt{font-size:0.48em;color:var(--primary);font-weight:600;text-align:center;}.rb-wrap{display:inline-flex;flex-direction:column;align-items:center;vertical-align:bottom;line-height:1.1;margin:0 0.02em;}.rb-rt{font-size:0.42em;color:var(--primary);font-weight:600;line-height:1.3;white-space:nowrap;}.rb-base{line-height:1.25;}.cover-body{align-items:center;text-align:center;padding-top:6cqi;padding-bottom:12cqi}.cover-title{font-size:11.5cqi;color:var(--primary);font-weight:600;margin-bottom:3cqi;letter-spacing:0.02em;line-height:1.6;margin-top:2cqi;word-break:normal !important; overflow-wrap:break-word !important;}.tag-pill{display:inline-block;background:var(--accent);color:white;padding:1.5cqi 5cqi;border-radius:2px;font-size:4.5cqi;font-weight:500;margin-top:3cqi;margin-bottom:4cqi;box-shadow:1px 2px 4px rgba(0,0,0,0.15);letter-spacing:0.05em;position:relative;}.cover-desc{font-size:5.5cqi;color:var(--text);font-weight:400;line-height:1.5;background:var(--inner-bg);padding:4.5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);width:96%;margin:0 auto;text-align:center;box-sizing:border-box !important;max-height:22cqi;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;text-overflow:ellipsis;}.logo-footer{position:absolute;left:0;right:0;bottom:3cqi;z-index:10;display:flex;justify-content:center;pointer-events:none;}';
+  return '@import url(\'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap\');:root { --primary:'+theme.primary+'; --accent:'+theme.accent+'; --card-bg:'+theme.cardBg+'; --inner-bg:#fdfbf6; --shadow-color:rgba(0,0,0,0.2); --text:#3a3226; --paper-border:#eaddc5; }*{box-sizing:border-box}html,body{margin:0;padding:0;font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;font-weight:400;color:#334155;background:#f8fafc;}.kotanuki-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;padding:16px;justify-items:center;}.ig-card{container-type:inline-size;width:100%;max-width:300px;aspect-ratio:1/1;border-radius:8px;background-color:var(--card-bg);background-image:'+getSvgUrl(theme.svg, theme.primary)+';background-size:'+theme.size+';background-position:center;background-repeat:repeat;border:8px solid #f7f2e6;box-shadow:2px 4px 12px var(--shadow-color);display:flex;flex-direction:column;overflow:hidden;position:relative;margin:0 auto}.card-header{padding:4cqi 5cqi 0 5cqi;display:flex;align-items:center;flex-shrink:0;z-index:2;gap:3cqi}.header-badge{background:var(--primary);color:#fff;font-weight:600;font-size:5cqi;width:9cqi;height:9cqi;border-radius:4px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.15);flex-shrink:0;}.header-title{font-size:4.5cqi;font-weight:600;color:var(--primary);background:#fff;padding:1.5cqi 3.5cqi;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.08);white-space:nowrap;letter-spacing:0.05em;}.card-body{flex-grow:1;display:flex;flex-direction:column;justify-content:center;padding:1cqi 5cqi 10cqi 5cqi;z-index:2;position:relative;overflow:hidden;max-height:100%;}.text-bg{background:var(--inner-bg);padding:5cqi 5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);position:relative;text-align:center;width:96%;max-width:100%;max-height:78cqi;margin:0 auto;display:flex;flex-direction:column;align-items:center;box-sizing:border-box !important; word-break:normal !important; overflow-wrap:break-word !important; overflow:hidden;}.fa-icon{font-size:8cqi;display:block;margin:0 auto 2cqi auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1));opacity:0.9;}.text-primary{color:var(--primary)} .text-accent{color:var(--accent)}.main-text{font-size:7.8cqi;font-weight:500;color:var(--text);line-height:2.05;margin-bottom:2cqi;letter-spacing:0.02em;word-break:normal !important; overflow-wrap:break-word !important;}.example-line{margin-bottom:2.2cqi;}.example-badge{display:inline-block;font-size:0.62em;font-weight:700;color:var(--accent);margin-right:0.3em;}.note-box{margin-top:3cqi;line-height:1.45;color:#594d3c;font-weight:600;text-align:center;font-size:5.6cqi;padding:0 2cqi;position:relative;z-index:2;max-height:20cqi;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-overflow:ellipsis;}ruby{font-family:\'Noto Sans JP\',\'Noto Sans TC\',sans-serif;}rt{font-size:0.48em;color:var(--primary);font-weight:600;text-align:center;}.rb-wrap{display:inline-flex;flex-direction:column;align-items:center;vertical-align:bottom;line-height:1.1;margin:0 0.02em;}.rb-rt{font-size:0.42em;color:var(--primary);font-weight:600;line-height:1.3;white-space:nowrap;}.rb-base{line-height:1.25;}.cover-body{align-items:center;text-align:center;padding-top:6cqi;padding-bottom:12cqi}.cover-title{font-size:11.5cqi;color:var(--primary);font-weight:600;margin-bottom:3cqi;letter-spacing:0.02em;line-height:1.6;margin-top:2cqi;word-break:normal !important; overflow-wrap:break-word !important;}.tag-pill{display:inline-block;background:var(--accent);color:white;padding:1.5cqi 5cqi;border-radius:2px;font-size:4.5cqi;font-weight:500;margin-top:3cqi;margin-bottom:4cqi;box-shadow:1px 2px 4px rgba(0,0,0,0.15);letter-spacing:0.05em;position:relative;}.cover-desc{font-size:5.5cqi;color:var(--text);font-weight:400;line-height:1.5;background:var(--inner-bg);padding:4.5cqi;border-radius:2px;border:1px solid var(--paper-border);outline:4px solid rgba(255,255,255,0.6);width:96%;margin:0 auto;text-align:center;box-sizing:border-box !important;max-height:22cqi;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;text-overflow:ellipsis;}.logo-footer{position:absolute;left:0;right:0;bottom:3cqi;z-index:10;display:flex;justify-content:center;pointer-events:none;}';
 }
 function generateCardsHTML(day){
   const p = ensureCards(day);
